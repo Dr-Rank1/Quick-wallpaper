@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation -->
+    <string name="nav_home">Nyumbani</string>
+    <string name="nav_categories">Makundi</string>
+    <string name="nav_favorites">Vipendwa</string>
+    <string name="nav_settings">Mipangilio</string>
+
+    <!-- Detail -->
+    <string name="set_wallpaper">Weka Mwandiko</string>
+    <string name="wallpaper_set_success">Mwandiko umewekwa!</string>
+    <string name="set_wallpaper_title">Weka kama mwandiko</string>
+    <string name="wallpaper_home">Skrini ya Nyumbani</string>
+    <string name="wallpaper_lock">Skrini ya Kufunga</string>
+    <string name="wallpaper_both">Zote Mbili</string>
+
+    <!-- Download feedback -->
+    <string name="download_in_progress">Inapakua picha ya ukuta…</string>
+    <string name="download_success">Imehifadhiwa kwenye Picha/Pazia</string>
+    <string name="download_failed">Upakiaji umeshindwa</string>
+    <string name="action_open">FUNGUA</string>
+    <string name="action_retry">JARIBU TENA</string>
+    <string name="already_downloaded">Tayari ipo kwenye jalada lako</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_downloads">Upakiaji wa picha za ukuta</string>
+    <string name="notification_channel_downloads_desc">Taarifa za maendeleo na ukamilishaji wa upakiaji wa picha za ukuta</string>
+    <string name="notification_downloading">Inapakua picha ya ukuta na %1$s</string>
+    <string name="notification_saved">Imehifadhiwa kwenye Picha/Pazia</string>
+    <string name="notification_failed">Upakiaji umeshindwa — gusa kurudia</string>
+
+    <!-- Settings -->
+    <string name="settings_appearance">Muonekano</string>
+    <string name="settings_dark_mode">Hali ya Giza</string>
+    <string name="settings_downloads">Upakiaji</string>
+    <string name="settings_quality">Ubora wa Upakiaji</string>
+    <string name="settings_clear_cache">Futa Hifadhi ya Picha</string>
+    <string name="settings_cache_cleared">Hifadhi imefutwa</string>
+    <string name="settings_support">Msaada</string>
+    <string name="settings_rate">Pima Pazia</string>
+    <string name="settings_share">Shiriki Pazia</string>
+    <string name="settings_version">Toleo</string>
+
+    <!-- Onboarding -->
+    <string name="skip">Ruka</string>
+    <string name="next">Endelea</string>
+    <string name="get_started">Anza</string>
+</resources>

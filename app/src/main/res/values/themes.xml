@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Pazia" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/pazia_black</item>
+        <item name="android:statusBarColor">@color/pazia_black</item>
+        <item name="android:navigationBarColor">@color/pazia_black</item>
+    </style>
+
+    <style name="Theme.Pazia.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/pazia_black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Pazia</item>
+    </style>
+</resources>
