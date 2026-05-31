@@ -27,7 +27,7 @@
 | Images | Coil 2 (250 MB disk cache, 25% mem cache) |
 | Paging | Paging 3 |
 | Local DB | Room |
-| Background | WorkManager (HiltWorker) |
+| Downloads | Android DownloadManager + BroadcastReceiver |
 | Preferences | DataStore |
 | Ads | Google AdMob |
 | Async | Coroutines + Flow |
@@ -100,9 +100,11 @@ com.iankamau.pazia/
 │   ├── components/                 PhotoGridItem, ShimmerBox, AdSlot, ErrorState
 │   ├── theme/                      PaziaTheme, Color, Typography
 │   └── NavGraph.kt                 Single-activity Compose Navigation
+├── download/
+│   ├── WallpaperDownloader.kt      DownloadManager wrapper (enqueue + status query)
+│   └── DownloadCompleteReceiver.kt BroadcastReceiver → DownloadEventBus
 ├── service/
-│   ├── WallpaperApplier.kt         WallpaperManager wrapper (Home/Lock/Both)
-│   └── DownloadWorker.kt           HiltWorker → MediaStore (scoped storage)
+│   └── WallpaperApplier.kt         WallpaperManager wrapper (Home/Lock/Both)
 ├── ads/                            AppOpenAdManager, InterstitialAdManager, RewardedAdManager
 ├── di/                             NetworkModule, DatabaseModule, AppModule, WorkerModule
 ├── MainActivity.kt
@@ -128,7 +130,7 @@ The app follows the Pexels API guidelines:
 | `POST_NOTIFICATIONS` | Download progress notification (Android 13+) |
 | `WAKE_LOCK` | WorkManager downloads |
 | `WRITE_EXTERNAL_STORAGE` | Save photos on Android ≤ 8 only |
-| `READ_MEDIA_IMAGES` | Gallery access on Android 13+ |
+| `READ_MEDIA_IMAGES` | Query MediaStore for downloaded images (Android 13+) |
 
 ## License
 

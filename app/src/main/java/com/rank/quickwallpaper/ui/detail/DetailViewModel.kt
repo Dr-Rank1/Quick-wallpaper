@@ -25,6 +25,7 @@ import com.rank.quickwallpaper.ui.settings.SettingsViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -86,6 +87,7 @@ class DetailViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DownloadQuality.FULL)
 
     private var currentDownloadId: Long? = null
+    private var loadJob: Job? = null
 
     companion object {
         private val KEY_DOWNLOADED_IDS = stringSetPreferencesKey("downloaded_photo_ids")
@@ -129,7 +131,8 @@ class DetailViewModel @Inject constructor(
     }
 
     private fun loadPhoto() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.value = DetailUiState.Loading
             repository.getPhoto(photoId)
                 .onSuccess { photo ->

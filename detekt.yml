@@ -1,0 +1,21 @@
+build:
+  maxIssues: 50
+
+style:
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+  WildcardImport:
+    active: false
+
+complexity:
+  LongParameterList:
+    active: false
+  TooManyFunctions:
+    active: false
+
+exclusions:
+  paths:
+    - "*/build/*"
+    - "*/test/*"
+    - "*/androidTest/*"

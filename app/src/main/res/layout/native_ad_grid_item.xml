@@ -21,7 +21,7 @@
             android:background="@drawable/ad_badge_background"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp"
-            android:text="Ad"
+            android:text="@string/ad_badge"
             android:textColor="#000000"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -31,6 +31,7 @@
         <!-- App icon — minimum 40dp x 40dp (≥ 32dp required) -->
         <ImageView
             android:id="@+id/ad_app_icon"
+            android:contentDescription="@null"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginTop="6dp"

@@ -57,6 +57,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -108,12 +109,10 @@ fun DetailScreen(
     val haptics = LocalHapticFeedback.current
     var showCheckmark by remember { mutableStateOf(false) }
 
-    // Notification permission — request before first download on Android 13+
     val notifPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         rememberPermissionState(android.Manifest.permission.POST_NOTIFICATIONS)
     } else null
 
-    // Wallpaper feedback
     LaunchedEffect(wallpaperState) {
         when (val state = wallpaperState) {
             is WallpaperState.Success -> {
@@ -128,7 +127,6 @@ fun DetailScreen(
         }
     }
 
-    // Download feedback — snackbar + haptic
     LaunchedEffect(downloadState) {
         when (val state = downloadState) {
             DownloadState.InProgress -> {
@@ -140,7 +138,6 @@ fun DetailScreen(
             is DownloadState.Success -> {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 showCheckmark = true
-                // Show snackbar independently so it outlasts the 2-second animation
                 scope.launch {
                     val result = snackbarHost.showSnackbar(
                         message = context.getString(R.string.download_success),
@@ -195,9 +192,9 @@ fun DetailScreen(
                 val photo = state.photo
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    var scale by remember { mutableStateOf(1f) }
-                    var offsetX by remember { mutableStateOf(0f) }
-                    var offsetY by remember { mutableStateOf(0f) }
+                    var scale by remember { mutableFloatStateOf(1f) }
+                    var offsetX by remember { mutableFloatStateOf(0f) }
+                    var offsetY by remember { mutableFloatStateOf(0f) }
 
                     val placeholderColor = runCatching {
                         Color(android.graphics.Color.parseColor(photo.color ?: "#1E1E1E"))
@@ -208,7 +205,7 @@ fun DetailScreen(
                             .data(photo.smallUrl)
                             .memoryCacheKey(photo.id)
                             .diskCacheKey(photo.id)
-                            .size(Size.ORIGINAL)
+                            .size(800, 800)
                             .scale(Scale.FIT)
                             .build(),
                         contentDescription = null,
@@ -251,7 +248,6 @@ fun DetailScreen(
                             }
                     )
 
-                    // Back button
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -272,7 +268,6 @@ fun DetailScreen(
                         }
                     }
 
-                    // Bottom action bar
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -347,7 +342,6 @@ fun DetailScreen(
                                 }
                             }
 
-                            // Download button — reflects download state
                             val isDownloaded = downloadState is DownloadState.AlreadyDownloaded
                             FilledIconButton(
                                 onClick = {

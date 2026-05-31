@@ -1,5 +1,6 @@
 package com.rank.quickwallpaper.ui.components
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
@@ -30,28 +32,25 @@ import com.rank.quickwallpaper.ads.AdIds
 @Composable
 fun NativeAdSlot(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val adVm: NativeAdViewModel = viewModel()
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
 
     DisposableEffect(Unit) {
-        val loader = AdLoader.Builder(context, AdIds.NATIVE)
-            .forNativeAd { ad -> nativeAd = ad }
-            .withAdListener(object : AdListener() {
-                override fun onAdFailedToLoad(e: LoadAdError) { nativeAd = null }
-            })
-            .build()
-        loader.loadAd(AdRequest.Builder().build())
-        onDispose { nativeAd?.destroy() }
+        adVm.loadAd(context)
+        onDispose { adVm.releaseAd() }
     }
 
-    val ad = nativeAd ?: return   // render nothing until ad is loaded
+    val ad = adVm.nativeAd
+    if (ad == null) return
 
     AndroidView(
         modifier = modifier.fillMaxWidth().wrapContentHeight(),
         factory = { ctx -> inflateAndBind(ctx, ad) },
-        update  = { view -> bindNativeAd(view as? NativeAdView ?: return@AndroidView, ad) }
+        update = { view -> bindNativeAd(view as? NativeAdView ?: return@AndroidView, ad) }
     )
 }
 
+@SuppressLint("InflateParams")
 private fun inflateAndBind(context: Context, ad: NativeAd): NativeAdView {
     val view = LayoutInflater.from(context)
         .inflate(R.layout.native_ad_grid_item, null) as NativeAdView
@@ -60,12 +59,10 @@ private fun inflateAndBind(context: Context, ad: NativeAd): NativeAdView {
 }
 
 private fun bindNativeAd(adView: NativeAdView, ad: NativeAd) {
-    // Headline (required)
     val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
     headlineView.text = ad.headline
     adView.headlineView = headlineView
 
-    // Body
     val bodyView = adView.findViewById<TextView>(R.id.ad_body)
     if (ad.body != null) {
         bodyView.text = ad.body
@@ -75,7 +72,6 @@ private fun bindNativeAd(adView: NativeAdView, ad: NativeAd) {
     }
     adView.bodyView = bodyView
 
-    // Icon
     val iconView = adView.findViewById<ImageView>(R.id.ad_app_icon)
     if (ad.icon != null) {
         iconView.setImageDrawable(ad.icon!!.drawable)
@@ -85,11 +81,9 @@ private fun bindNativeAd(adView: NativeAdView, ad: NativeAd) {
     }
     adView.iconView = iconView
 
-    // Media
     val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
     adView.mediaView = mediaView
 
-    // CTA button
     val ctaView = adView.findViewById<Button>(R.id.ad_call_to_action)
     if (ad.callToAction != null) {
         ctaView.text = ad.callToAction
@@ -99,6 +93,5 @@ private fun bindNativeAd(adView: NativeAdView, ad: NativeAd) {
     }
     adView.callToActionView = ctaView
 
-    // Register the native ad — AdChoices overlay is added automatically by the SDK
     adView.setNativeAd(ad)
 }

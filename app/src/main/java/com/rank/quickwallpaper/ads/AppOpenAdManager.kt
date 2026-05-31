@@ -46,7 +46,9 @@ class AppOpenAdManager @Inject constructor(
             onComplete()
             return
         }
-        appOpenAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+        val ad = appOpenAd ?: run { onComplete(); return }
+        isShowingAd = true
+        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
                 appOpenAd = null
                 isShowingAd = false
@@ -57,10 +59,7 @@ class AppOpenAdManager @Inject constructor(
                 isShowingAd = false
                 onComplete()
             }
-            override fun onAdShowedFullScreenContent() {
-                isShowingAd = true
-            }
         }
-        appOpenAd?.show(activity) ?: onComplete()
+        ad.show(activity)
     }
 }

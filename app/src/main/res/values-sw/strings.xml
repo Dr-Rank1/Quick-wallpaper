@@ -1,48 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name -->
+    <string name="app_name">Pazia</string>
+
+    <!-- AdMob -->
+    <string name="ad_badge">Tangazo</string>
+
     <!-- Navigation -->
     <string name="nav_home">Nyumbani</string>
     <string name="nav_categories">Makundi</string>
     <string name="nav_favorites">Vipendwa</string>
     <string name="nav_settings">Mipangilio</string>
+    <string name="collections">Mikusanyo</string>
+
+    <!-- Search -->
+    <string name="search_hint">Tafuta picha za ukuta…</string>
+    <string name="search_prompt">Andika kutafuta mamilioni ya picha</string>
+    <string name="no_results">Hakuna matokeo ya \"%1$s\"</string>
+    <string name="clear">Futa</string>
 
     <!-- Detail -->
+    <string name="back">Nyuma</string>
     <string name="set_wallpaper">Weka Mwandiko</string>
-    <string name="wallpaper_set_success">Mwandiko umewekwa!</string>
+    <string name="download">Pakua</string>
+    <string name="favorite">Penda</string>
+    <string name="share">Shiriki</string>
+    <string name="photo_by">Picha na %1$s kwenye Pexels</string>
     <string name="set_wallpaper_title">Weka kama mwandiko</string>
     <string name="wallpaper_home">Skrini ya Nyumbani</string>
     <string name="wallpaper_lock">Skrini ya Kufunga</string>
     <string name="wallpaper_both">Zote Mbili</string>
+    <string name="cancel">Ghairi</string>
+    <string name="wallpaper_set_success">Mwandiko umewekwa!</string>
 
-    <!-- Download feedback -->
+    <!-- Download -->
     <string name="download_in_progress">Inapakua picha ya ukuta…</string>
     <string name="download_success">Imehifadhiwa kwenye Picha/Pazia</string>
-    <string name="download_failed">Upakiaji umeshindwa</string>
+    <string name="download_failed">Upakuaji umeshindwa</string>
     <string name="action_open">FUNGUA</string>
     <string name="action_retry">JARIBU TENA</string>
     <string name="already_downloaded">Tayari ipo kwenye jalada lako</string>
 
-    <!-- Notifications -->
-    <string name="notification_channel_downloads">Upakiaji wa picha za ukuta</string>
-    <string name="notification_channel_downloads_desc">Taarifa za maendeleo na ukamilishaji wa upakiaji wa picha za ukuta</string>
-    <string name="notification_downloading">Inapakua picha ya ukuta na %1$s</string>
-    <string name="notification_saved">Imehifadhiwa kwenye Picha/Pazia</string>
-    <string name="notification_failed">Upakiaji umeshindwa — gusa kurudia</string>
+    <!-- Favorites -->
+    <string name="favorites_empty">Hakuna vipendwa bado.\nGusa ikoni ya moyo kwenye picha yoyote.</string>
+
+    <!-- Error / state -->
+    <string name="error_load">Haikuweza kupakia picha. Angalia muunganisho wako.</string>
+    <string name="retry">Jaribu tena</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Mamilioni ya Picha za Ukuta</string>
+    <string name="onboarding_desc_1">Vinjari mkusanyo wa picha nzuri kutoka kwa wapiga picha wa Pexels duniani kote.</string>
+    <string name="onboarding_title_2">Weka kwa Gusa Moja</string>
+    <string name="onboarding_desc_2">Tumia kwenye Skrini yako ya Nyumbani, Skrini ya Kufunga, au zote mbili — papo hapo, bila shida.</string>
+    <string name="onboarding_title_3">Mkusanyo Wako</string>
+    <string name="onboarding_desc_3">Hifadhi vipendwa vyako, gundua mikusanyo iliyopangwa, na upakue kwa ubora kamili.</string>
+    <string name="skip">Ruka</string>
+    <string name="next">Endelea</string>
+    <string name="get_started">Anza</string>
 
     <!-- Settings -->
     <string name="settings_appearance">Muonekano</string>
     <string name="settings_dark_mode">Hali ya Giza</string>
-    <string name="settings_downloads">Upakiaji</string>
-    <string name="settings_quality">Ubora wa Upakiaji</string>
+    <string name="settings_dark_mode_desc">Tumia mandhari ya giza (inapendekezwa kwa AMOLED)</string>
+    <string name="settings_dynamic_colors">Rangi za Material You</string>
+    <string name="settings_dynamic_colors_desc">Tumia rangi zinazotokana na mwandiko (Android 12+)</string>
+    <string name="settings_about">Kuhusu</string>
+    <string name="settings_attribution">Picha na Pexels</string>
+    <string name="settings_attribution_desc">Picha zote zinatolewa na wapiga picha wa Pexels. Pazia ni programu ya picha za ukuta inayotumia API ya Pexels.</string>
+    <string name="pexels_license">Leseni na Sheria za Pexels</string>
+
+    <!-- Settings - Downloads -->
+    <string name="settings_downloads">Upakuaji</string>
+    <string name="settings_quality">Ubora wa Upakuaji</string>
+    <string name="settings_quality_desc">Ubora wa picha zinazohifadhiwa kwenye jalada lako</string>
+    <string name="settings_quality_medium">Wastani</string>
+    <string name="settings_quality_large">Kubwa</string>
+    <string name="settings_quality_full">Kamili</string>
     <string name="settings_clear_cache">Futa Hifadhi ya Picha</string>
+    <string name="settings_clear_cache_desc">Futa nafasi ya diski inayotumiwa na picha zilizohifadhiwa</string>
     <string name="settings_cache_cleared">Hifadhi imefutwa</string>
+
+    <!-- Settings - Support -->
     <string name="settings_support">Msaada</string>
     <string name="settings_rate">Pima Pazia</string>
+    <string name="settings_rate_desc">Unapenda programu? Tuachie hakiki</string>
     <string name="settings_share">Shiriki Pazia</string>
-    <string name="settings_version">Toleo</string>
+    <string name="settings_share_desc">Pendekeza kwa marafiki na familia</string>
+    <string name="settings_share_text">Angalia Pazia — mamilioni ya picha nzuri za ukuta, bila malipo! Pakua kwenye Play Store.</string>
 
-    <!-- Onboarding -->
-    <string name="skip">Ruka</string>
-    <string name="next">Endelea</string>
-    <string name="get_started">Anza</string>
+    <!-- Settings - About -->
+    <string name="settings_version">Toleo</string>
 </resources>

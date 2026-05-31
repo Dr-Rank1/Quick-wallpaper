@@ -7,16 +7,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,6 +40,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Collections
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Category
 import com.rank.quickwallpaper.ui.components.ErrorState
@@ -61,6 +67,7 @@ private val chipShape = RoundedCornerShape(50)
 @Composable
 fun CategoriesScreen(
     onPhotoClick: (String) -> Unit,
+    onCollectionsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: CategoriesViewModel = hiltViewModel()
 ) {
@@ -89,6 +96,26 @@ fun CategoriesScreen(
             verticalItemSpacing = 8.dp,
             modifier = Modifier.fillMaxSize()
         ) {
+            item(span = StaggeredGridItemSpan.FullLine) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (onCollectionsClick != null) {
+                        androidx.compose.material3.AssistChip(
+                            onClick = onCollectionsClick,
+                            label = { Text(stringResource(R.string.collections)) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.Collections,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+                    }
+                }
+            }
             item(span = StaggeredGridItemSpan.FullLine) {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 10.dp),

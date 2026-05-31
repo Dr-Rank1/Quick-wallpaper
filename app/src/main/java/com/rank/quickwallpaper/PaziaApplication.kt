@@ -11,7 +11,6 @@ import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.util.DebugLogger
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 import javax.inject.Inject
@@ -31,15 +30,6 @@ class PaziaApplication : Application(), Configuration.Provider {
         super.onCreate()
         setupCoil()
         MobileAds.initialize(this)
-        // Add your hashed test device ID here (find it in logcat after the first ad load).
-        // This ensures YOUR device never triggers real ad clicks, even on release builds.
-        // Search logcat for "Use RequestConfiguration.Builder().setTestDeviceIds" to get the ID.
-        val testDeviceIds = listOf<String>(
-            // "YOUR_HASHED_DEVICE_ID_HERE"
-        )
-        MobileAds.setRequestConfiguration(
-            RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build()
-        )
     }
 
     private fun setupCoil() {
@@ -47,21 +37,21 @@ class PaziaApplication : Application(), Configuration.Provider {
             .okHttpClient(okHttpClient)
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizePercent(0.30)   // 30% of available RAM
+                    .maxSizePercent(0.25)
                     .strongReferencesEnabled(true)
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(500L * 1024 * 1024)  // 500 MB disk cache
+                    .maxSizeBytes(250L * 1024 * 1024)
                     .build()
             }
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
             .networkCachePolicy(CachePolicy.ENABLED)
             .crossfade(true)
-            .respectCacheHeaders(false)  // Pexels CDN headers are short — ignore them
+            .respectCacheHeaders(false)
             .apply {
                 if (BuildConfig.DEBUG) logger(DebugLogger())
             }

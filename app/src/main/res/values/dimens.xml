@@ -1,6 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <dimen name="grid_spacing">8dp</dimen>
-    <dimen name="card_radius">12dp</dimen>
-    <dimen name="screen_padding">16dp</dimen>
-</resources>
+<resources></resources>

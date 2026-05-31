@@ -11,14 +11,17 @@ fun PhotoDto.toDomain(): Photo = Photo(
     description = alt,
     likes = 0,
     downloads = 0,
-    thumbUrl = src.medium,    // ~350px — fast placeholder / tiny grid
-    smallUrl = src.large,     // ~940px — staggered grid items
-    regularUrl = src.large2x, // ~1880px — detail screen preview
-    fullUrl = src.original,   // full res — wallpaper + download
+    thumbUrl = src.medium,
+    smallUrl = src.large,
+    regularUrl = src.large2x,
+    fullUrl = src.original,
     rawUrl = src.original,
-    photographer = Photographer(
-        id = photographerId.toString(),
-        username = photographerUrl.substringAfterLast("@").trimEnd('/'),
+        photographer = Photographer(
+            id = photographerId.toString(),
+            username = if ("@" in photographerUrl)
+            photographerUrl.substringAfterLast("@").trimEnd('/')
+        else
+            photographerUrl.trimEnd('/').substringAfterLast('/'),
         name = photographer,
         profileUrl = photographerUrl,
         avatarUrl = null
