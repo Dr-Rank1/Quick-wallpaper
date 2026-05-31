@@ -91,7 +91,6 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // ── APPEARANCE ──────────────────────────────────────────────
             SectionLabel(stringResource(R.string.settings_appearance))
             Spacer(Modifier.height(8.dp))
             ElevatedCard(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
@@ -113,8 +112,6 @@ fun SettingsScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-
-            // ── DOWNLOADS ───────────────────────────────────────────────
             SectionLabel(stringResource(R.string.settings_downloads))
             Spacer(Modifier.height(8.dp))
             ElevatedCard(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
@@ -180,8 +177,6 @@ fun SettingsScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-
-            // ── SUPPORT ─────────────────────────────────────────────────
             SectionLabel(stringResource(R.string.settings_support))
             Spacer(Modifier.height(8.dp))
             ElevatedCard(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
@@ -231,8 +226,6 @@ fun SettingsScreen(
             }
 
             Spacer(Modifier.height(24.dp))
-
-            // ── ABOUT & LEGAL ────────────────────────────────────────────
             SectionLabel(stringResource(R.string.settings_about))
             Spacer(Modifier.height(8.dp))
             ElevatedCard(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Quick wallpaper</string>
+    <string name="app_name">Pazia</string>
+
+    <!-- AdMob -->
+    <string name="ad_badge">Ad</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -30,21 +33,12 @@
     <string name="wallpaper_set_success">Wallpaper set successfully!</string>
 
     <!-- Download -->
-    <string name="downloading_wallpaper">Downloading wallpaper…</string>
-    <string name="download_channel_name">Pazia Downloads</string>
-    <string name="download_complete_title">Wallpaper saved</string>
-    <string name="download_complete_text">Tap to view in Photos</string>
     <string name="download_in_progress">Downloading wallpaper…</string>
     <string name="download_success">Saved to Pictures/Pazia</string>
     <string name="download_failed">Download failed</string>
     <string name="action_open">OPEN</string>
     <string name="action_retry">RETRY</string>
     <string name="already_downloaded">Already in your gallery</string>
-    <string name="notification_channel_downloads">Wallpaper downloads</string>
-    <string name="notification_channel_downloads_desc">Notifications for wallpaper download progress and completion</string>
-    <string name="notification_downloading">Downloading wallpaper by %1$s</string>
-    <string name="notification_saved">Saved to Pictures/Pazia</string>
-    <string name="notification_failed">Download failed — tap to retry</string>
 
     <!-- Favorites -->
     <string name="favorites_empty">No favorites yet.\nTap the heart icon on any photo.</string>

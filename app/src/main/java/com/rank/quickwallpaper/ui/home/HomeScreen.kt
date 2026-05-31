@@ -148,12 +148,7 @@ private fun HomeTopBar(
         title = {
             Column {
                 Text(
-                    text = buildAnnotatedString {
-                        append("Pazia")
-                        withStyle(SpanStyle(color = PaziaAccent, fontWeight = FontWeight.Bold)) {
-                            append(" ✦")
-                        }
-                    },
+                    text = "Pazia",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
