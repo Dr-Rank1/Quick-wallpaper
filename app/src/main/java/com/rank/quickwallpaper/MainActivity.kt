@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
             val settings by settingsVm.settings.collectAsStateWithLifecycle()
 
             PaziaTheme(
-                darkTheme = settings.useDarkTheme,
                 dynamicColor = settings.useDynamicColors
             ) {
                 if (!onboardingDone) {

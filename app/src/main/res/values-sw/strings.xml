@@ -16,6 +16,7 @@
     <!-- Search -->
     <string name="search_hint">Tafuta picha za ukuta…</string>
     <string name="search_prompt">Andika kutafuta mamilioni ya picha</string>
+    <string name="search_trending">Zinazovuma</string>
     <string name="no_results">Hakuna matokeo ya \"%1$s\"</string>
     <string name="clear">Futa</string>
 
@@ -91,4 +92,9 @@
 
     <!-- Settings - About -->
     <string name="settings_version">Toleo</string>
+
+    <!-- Settings - Reset -->
+    <string name="settings_reset">Weka kwenya msingi</string>
+    <string name="settings_reset_done">Mpangilio umerejeshwa kwenye msingi</string>
+    <string name="settings_powered_by">Inaendeshwa na Pexels</string>
 </resources>

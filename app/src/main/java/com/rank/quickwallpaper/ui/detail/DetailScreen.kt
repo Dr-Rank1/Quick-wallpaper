@@ -14,6 +14,7 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,20 +24,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Wallpaper
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -45,26 +46,28 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -74,7 +77,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,10 +93,15 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.service.WallpaperTarget
 import com.rank.quickwallpaper.ui.components.ErrorState
+import com.rank.quickwallpaper.ui.components.PhotoGridItem
+import com.rank.quickwallpaper.ui.theme.PaziaAccent
+import com.rank.quickwallpaper.ui.theme.PaziaAccentLight
+import com.rank.quickwallpaper.ui.theme.PaziaOverlayHeavy
+import com.rank.quickwallpaper.ui.theme.PaziaOverlayLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
     onBack: () -> Unit,
@@ -176,7 +186,9 @@ fun DetailScreen(
         when (val state = uiState) {
             is DetailUiState.Loading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
             is DetailUiState.Error -> {
@@ -190,8 +202,23 @@ fun DetailScreen(
             }
             is DetailUiState.Success -> {
                 val photo = state.photo
+                var heroReady by remember { mutableStateOf(false) }
+                val heroAlpha by animateFloatAsState(
+                    targetValue = if (heroReady) 1f else 0f,
+                    animationSpec = tween(500, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                    label = "hero_alpha"
+                )
+                LaunchedEffect(Unit) { heroReady = true }
 
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            alpha = heroAlpha,
+                            scaleX = 0.92f + 0.08f * heroAlpha,
+                            scaleY = 0.92f + 0.08f * heroAlpha
+                        )
+                ) {
                     var scale by remember { mutableFloatStateOf(1f) }
                     var offsetX by remember { mutableFloatStateOf(0f) }
                     var offsetY by remember { mutableFloatStateOf(0f) }
@@ -248,20 +275,19 @@ fun DetailScreen(
                             }
                     )
 
-                    Row(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
                                 Brush.verticalGradient(
-                                    listOf(Color.Black.copy(0.5f), Color.Transparent)
+                                    listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent)
                                 )
                             )
-                            .padding(horizontal = 4.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(top = 8.dp)
                     ) {
                         IconButton(onClick = onBack) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = stringResource(R.string.back),
                                 tint = Color.White
                             )
@@ -274,15 +300,15 @@ fun DetailScreen(
                             .align(Alignment.BottomCenter)
                             .background(
                                 Brush.verticalGradient(
-                                    listOf(Color.Transparent, Color.Black.copy(0.85f))
+                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
                                 )
                             )
                             .windowInsetsPadding(WindowInsets.navigationBars)
                             .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 32.dp,
-                                bottom = 12.dp
+                                start = 20.dp,
+                                end = 20.dp,
+                                top = 40.dp,
+                                bottom = 16.dp
                             )
                     ) {
                         TextButton(
@@ -298,10 +324,14 @@ fun DetailScreen(
                             Text(
                                 text = stringResource(R.string.photo_by, photo.photographer.name),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White,
-                                textDecoration = TextDecoration.Underline
+                                color = Color.White.copy(alpha = 0.85f),
+                                textDecoration = TextDecoration.Underline,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
+
+                        Spacer(Modifier.height(4.dp))
 
                         Text(
                             text = buildString {
@@ -312,32 +342,42 @@ fun DetailScreen(
                                 }
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.65f),
+                            color = Color.White.copy(alpha = 0.55f),
                             maxLines = 2
                         )
 
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(16.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Button(
                                 onClick = { showWallpaperSheet = true },
-                                modifier = Modifier.weight(1f),
-                                enabled = wallpaperState !is WallpaperState.Applying
+                                modifier = Modifier.weight(1f).height(50.dp),
+                                enabled = wallpaperState !is WallpaperState.Applying,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = PaziaAccent
+                                )
                             ) {
                                 if (wallpaperState is WallpaperState.Applying) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(18.dp),
                                         strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.onPrimary
+                                        color = Color.White
                                     )
                                 } else {
-                                    Icon(Icons.Outlined.Wallpaper, null)
+                                    Icon(
+                                        Icons.Outlined.Wallpaper,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
                                     Text(
                                         text = stringResource(R.string.set_wallpaper),
-                                        modifier = Modifier.padding(start = 6.dp)
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -346,7 +386,7 @@ fun DetailScreen(
                             FilledIconButton(
                                 onClick = {
                                     when (downloadState) {
-                                        DownloadState.InProgress -> { /* already downloading */ }
+                                        DownloadState.InProgress -> {}
                                         DownloadState.AlreadyDownloaded -> {
                                             scope.launch {
                                                 val uri = viewModel.findDownloadedUri()
@@ -370,11 +410,11 @@ fun DetailScreen(
                                     }
                                 },
                                 enabled = downloadState !is DownloadState.InProgress,
+                                modifier = Modifier.size(50.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = if (isDownloaded)
-                                        MaterialTheme.colorScheme.primaryContainer
-                                    else
-                                        MaterialTheme.colorScheme.surfaceVariant
+                                    containerColor = if (isDownloaded) PaziaAccentLight.copy(alpha = 0.2f)
+                                    else Color.White.copy(alpha = 0.15f)
                                 )
                             ) {
                                 AnimatedContent(
@@ -388,21 +428,21 @@ fun DetailScreen(
                                 ) { target ->
                                     when (target) {
                                         "progress" -> CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
+                                            modifier = Modifier.size(18.dp),
                                             strokeWidth = 2.dp,
                                             color = Color.White
                                         )
                                         "check" -> Icon(
                                             Icons.Outlined.CheckCircle,
                                             contentDescription = null,
-                                            tint = if (isDownloaded)
-                                                MaterialTheme.colorScheme.primary
-                                            else
-                                                Color.White
+                                            tint = Color.White,
+                                            modifier = Modifier.size(22.dp)
                                         )
                                         else -> Icon(
                                             Icons.Outlined.Download,
-                                            contentDescription = stringResource(R.string.download)
+                                            contentDescription = stringResource(R.string.download),
+                                            tint = Color.White,
+                                            modifier = Modifier.size(22.dp)
                                         )
                                     }
                                 }
@@ -410,17 +450,19 @@ fun DetailScreen(
 
                             FilledIconButton(
                                 onClick = viewModel::toggleFavorite,
+                                modifier = Modifier.size(50.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    containerColor = if (state.isFavorite) PaziaAccent.copy(alpha = 0.25f)
+                                    else Color.White.copy(alpha = 0.15f)
                                 )
                             ) {
                                 Icon(
-                                    imageVector = if (state.isFavorite)
-                                        Icons.Outlined.Favorite
-                                    else
-                                        Icons.Outlined.FavoriteBorder,
+                                    imageVector = if (state.isFavorite) Icons.Outlined.Favorite
+                                    else Icons.Outlined.FavoriteBorder,
                                     contentDescription = stringResource(R.string.favorite),
-                                    tint = if (state.isFavorite) Color(0xFFFF4081) else Color.White
+                                    tint = if (state.isFavorite) PaziaAccentLight else Color.White,
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
 
@@ -432,11 +474,18 @@ fun DetailScreen(
                                     }
                                     context.startActivity(Intent.createChooser(sendIntent, null))
                                 },
+                                modifier = Modifier.size(50.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    containerColor = Color.White.copy(alpha = 0.15f)
                                 )
                             ) {
-                                Icon(Icons.Outlined.Share, stringResource(R.string.share))
+                                Icon(
+                                    Icons.Outlined.Share,
+                                    contentDescription = stringResource(R.string.share),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
                             }
                         }
                     }
@@ -446,6 +495,7 @@ fun DetailScreen(
                     ModalBottomSheet(
                         onDismissRequest = { showWallpaperSheet = false },
                         sheetState = sheetState,
+                        containerColor = MaterialTheme.colorScheme.surface,
                         dragHandle = { BottomSheetDefaults.DragHandle() }
                     ) {
                         WallpaperTargetSheet(
@@ -473,28 +523,35 @@ private fun WallpaperTargetSheet(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
             text = stringResource(R.string.set_wallpaper_title),
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(8.dp))
         WallpaperTarget.entries.forEach { target ->
-            OutlinedButton(
+            Button(
                 onClick = { onSelect(target) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
             ) {
                 Text(
                     text = when (target) {
                         WallpaperTarget.HOME -> stringResource(R.string.wallpaper_home)
                         WallpaperTarget.LOCK -> stringResource(R.string.wallpaper_lock)
                         WallpaperTarget.BOTH -> stringResource(R.string.wallpaper_both)
-                    }
+                    },
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
+        Spacer(Modifier.height(4.dp))
         TextButton(
             onClick = onDismiss,
             modifier = Modifier.align(Alignment.End)

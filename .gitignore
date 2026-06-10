@@ -38,3 +38,5 @@ local.properties
 google-services.json
 build/
 .gradle/
+# Keystore
+upload-keystore.jks

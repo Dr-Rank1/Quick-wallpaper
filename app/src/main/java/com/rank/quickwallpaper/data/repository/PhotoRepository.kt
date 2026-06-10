@@ -48,6 +48,14 @@ class PhotoRepository @Inject constructor(
         pagingSourceFactory = { PhotoPagingSource(api, PexelsQuery.Collection(collectionId)) }
     ).flow
 
+    suspend fun getRandomPhoto(): Result<Photo> = runCatching {
+        val randomPage = (1..50).random()
+        val response = api.getCuratedPhotos(page = randomPage, perPage = 30)
+        val photos = response.photos.map { it.toDomain() }
+        require(photos.isNotEmpty()) { "No photos found" }
+        photos.random()
+    }
+
     suspend fun getPhoto(id: String): Result<Photo> = runCatching {
         api.getPhoto(id.toLong()).toDomain()
     }
