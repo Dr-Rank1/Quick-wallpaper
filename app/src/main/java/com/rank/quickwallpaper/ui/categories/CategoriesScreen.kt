@@ -6,21 +6,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,17 +34,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Collections
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Category
 import com.rank.quickwallpaper.ui.components.ErrorState
@@ -49,19 +53,27 @@ import com.rank.quickwallpaper.ui.components.PhotoGridItem
 import com.rank.quickwallpaper.ui.components.ShimmerGrid
 
 private val categoryColors = mapOf(
-    "nature"       to Color(0xFF2D6A4F),
-    "architecture" to Color(0xFF5C4A8A),
-    "abstract"     to Color(0xFFD64045),
-    "animals"      to Color(0xFF6B4226),
-    "travel"       to Color(0xFF1A6FA6),
-    "minimal"      to Color(0xFF4A5568),
-    "dark"         to Color(0xFF1A1A2E),
-    "cars"         to Color(0xFF9B2335),
-    "space"        to Color(0xFF0D1B2A),
-    "kenya"        to Color(0xFF006600)
+    "nature"       to Color(0xFF059669),
+    "architecture" to Color(0xFF7C3AED),
+    "abstract"     to Color(0xFFDC2626),
+    "animals"      to Color(0xFFD97706),
+    "travel"       to Color(0xFF0284C7),
+    "minimal"      to Color(0xFF6B7280),
+    "dark"         to Color(0xFF1F2937),
+    "cars"         to Color(0xFFBE123C),
+    "space"        to Color(0xFF1E3A5F),
+    "kenya"        to Color(0xFF059669),
+    "street"       to Color(0xFFA16207),
+    "food"         to Color(0xFFE11D48),
+    "music"        to Color(0xFF9333EA),
+    "technology"   to Color(0xFF0284C7),
+    "people"       to Color(0xFFDB2777),
+    "business"     to Color(0xFF2563EB),
+    "health"       to Color(0xFF16A34A),
+    "sports"       to Color(0xFFEA580C),
+    "fashion"      to Color(0xFFC026D3),
+    "film"         to Color(0xFF4F46E5)
 )
-
-private val chipShape = RoundedCornerShape(50)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,38 +104,18 @@ fun CategoriesScreen(
                 top = padding.calculateTopPadding(),
                 bottom = padding.calculateBottomPadding() + 8.dp
             ),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalItemSpacing = 8.dp,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalItemSpacing = 10.dp,
             modifier = Modifier.fillMaxSize()
         ) {
             item(span = StaggeredGridItemSpan.FullLine) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (onCollectionsClick != null) {
-                        androidx.compose.material3.AssistChip(
-                            onClick = onCollectionsClick,
-                            label = { Text(stringResource(R.string.collections)) },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Outlined.Collections,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-            item(span = StaggeredGridItemSpan.FullLine) {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(viewModel.categories, key = { it.id }) { category ->
-                        CategoryChip(
+                        CategoryCard(
                             category = category,
                             selected = category.id == selectedCategory.id,
                             accentColor = categoryColors[category.id] ?: MaterialTheme.colorScheme.primary,
@@ -153,7 +145,10 @@ fun CategoriesScreen(
                         key = photos.itemKey { it.id }
                     ) { index ->
                         val photo = photos[index] ?: return@items
-                        PhotoGridItem(photo = photo, onClick = { onPhotoClick(photo.id) })
+                        PhotoGridItem(
+                            photo = photo,
+                            onClick = { onPhotoClick(photo.id) }
+                        )
                     }
 
                     if (photos.loadState.append is LoadState.Loading) {
@@ -166,37 +161,57 @@ fun CategoriesScreen(
 }
 
 @Composable
-private fun CategoryChip(
+private fun CategoryCard(
     category: Category,
     selected: Boolean,
     accentColor: Color,
     onClick: () -> Unit
 ) {
-    val bgColor by animateColorAsState(
-        targetValue = if (selected) accentColor else accentColor.copy(alpha = 0.15f),
-        animationSpec = tween(200),
-        label = "chip_bg_${category.id}"
+    val shape = RoundedCornerShape(16.dp)
+    val borderAlpha by animateColorAsState(
+        targetValue = if (selected) accentColor else Color.Transparent,
+        animationSpec = tween(300),
+        label = "card_border_${category.id}"
     )
-    val textColor by animateColorAsState(
-        targetValue = if (selected) Color.White else accentColor,
-        animationSpec = tween(200),
-        label = "chip_text_${category.id}"
-    )
+    val scale = if (selected) 1f else 0.96f
 
     Box(
         modifier = Modifier
-            .clip(chipShape)
-            .background(bgColor)
+            .width(120.dp)
+            .height(152.dp)
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        accentColor.copy(alpha = 0.55f),
+                        accentColor.copy(alpha = 0.2f)
+                    )
+                )
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
+            .padding(top = 14.dp, start = 12.dp, end = 12.dp, bottom = 12.dp),
+        contentAlignment = Alignment.TopStart
     ) {
-        Text(
-            text = "${category.emoji}  ${category.displayName}",
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-            ),
-            color = textColor
-        )
+        Column {
+            Text(
+                text = category.emoji,
+                fontSize = 28.sp
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = category.displayName,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                color = Color.White.copy(alpha = if (selected) 1f else 0.8f)
+            )
+        }
+        if (selected) {
+            Text(
+                text = "●",
+                color = accentColor,
+                fontSize = 8.sp,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 4.dp, bottom = 4.dp)
+            )
+        }
     }
 }

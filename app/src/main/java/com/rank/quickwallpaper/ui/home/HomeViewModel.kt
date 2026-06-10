@@ -8,14 +8,32 @@ import com.rank.quickwallpaper.data.repository.PhotoRepository
 import com.rank.quickwallpaper.domain.model.Photo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    repository: PhotoRepository
+    private val repository: PhotoRepository
 ) : ViewModel() {
 
     val photos: Flow<PagingData<Photo>> = repository
         .getEditorialFeed()
         .cachedIn(viewModelScope)
+
+    private val _randomPhotoId = MutableStateFlow<String?>(null)
+    val randomPhotoId: StateFlow<String?> = _randomPhotoId
+
+    fun shuffle() {
+        viewModelScope.launch {
+            repository.getRandomPhoto().onSuccess { photo ->
+                _randomPhotoId.value = photo.id
+            }
+        }
+    }
+
+    fun onRandomPhotoNavigated() {
+        _randomPhotoId.value = null
+    }
 }

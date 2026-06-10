@@ -22,8 +22,8 @@ android {
         applicationId = "com.rank.quickwallpaper"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.0.4"
+        versionCode = 13
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }

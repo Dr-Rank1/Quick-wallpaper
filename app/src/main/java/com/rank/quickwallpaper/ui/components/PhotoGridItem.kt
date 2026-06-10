@@ -4,12 +4,17 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,20 +25,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.rank.quickwallpaper.domain.model.Photo
 
-private val cardShape = RoundedCornerShape(14.dp)
+private val cardShape = RoundedCornerShape(12.dp)
 
 @Composable
 fun PhotoGridItem(
@@ -51,35 +55,39 @@ fun PhotoGridItem(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = tween(150),
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = tween(200),
         label = "grid_item_scale"
     )
+
+    val aspectRatioMod = if (photo.aspectRatio > 0)
+        Modifier.aspectRatio(photo.aspectRatio.coerceIn(0.5f, 2.5f)) else Modifier
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .scale(scale)
-            .graphicsLayer {
-                shadowElevation = if (isPressed) 4f else 2f
-            }
             .clip(cardShape)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .background(placeholderColor)
     ) {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = ImageRequest.Builder(context)
                 .data(photo.smallUrl)
                 .memoryCacheKey(photo.id)
                 .diskCacheKey(photo.id)
-                .crossfade(250)
+                .crossfade(300)
                 .scale(Scale.FILL)
                 .build(),
             contentDescription = photo.description ?: photo.photographer.name,
             contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(photo.aspectRatio.coerceIn(0.5f, 2f))
+            loading = {
+                ShimmerCard(
+                    modifier = Modifier.fillMaxWidth().then(aspectRatioMod),
+                    cornerRadius = 12
+                )
+            },
+            modifier = Modifier.fillMaxWidth().then(aspectRatioMod)
         )
 
         Box(
@@ -87,23 +95,42 @@ fun PhotoGridItem(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .background(
-                    brush = Brush.verticalGradient(
+                    Brush.verticalGradient(
                         colorStops = arrayOf(
                             0f to Color.Transparent,
-                            0.5f to Color.Black.copy(alpha = 0.3f),
-                            1f to Color.Black.copy(alpha = 0.72f)
+                            0.35f to Color.Black.copy(alpha = 0.15f),
+                            0.65f to Color.Black.copy(alpha = 0.45f),
+                            1f to Color.Black.copy(alpha = 0.78f)
                         )
                     )
                 )
-                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .padding(start = 10.dp, end = 10.dp, top = 18.dp, bottom = 10.dp)
         ) {
-            Text(
-                text = photo.photographer.name,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.95f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(18.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = photo.photographer.name.take(1),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = photo.photographer.name,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White.copy(alpha = 0.9f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

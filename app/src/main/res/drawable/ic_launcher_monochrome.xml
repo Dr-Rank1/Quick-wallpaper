@@ -5,24 +5,42 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Frame outline -->
+    <!-- Outer ring -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M30,20h48c5.52,0 10,4.48 10,10v48c0,5.52 -4.48,10 -10,10H30c-5.52,0 -10,-4.48 -10,-10V30c0,-5.52 4.48,-10 10,-10z" />
+        android:pathData="M16,16h76c8.84,0 16,7.16 16,16v60c0,8.84 -7.16,16 -16,16H16c-8.84,0 -16,-7.16 -16,-16V32c0,-8.84 7.16,-16 16,-16z" />
 
-    <!-- Frame border -->
+    <!-- Inner card -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M30,22h46c4.42,0 8,3.58 8,8v46c0,4.42 -3.58,8 -8,8H30c-4.42,0 -8,-3.58 -8,-8V30c0,-4.42 3.58,-8 8,-8zM30,20c-5.52,0 -10,4.48 -10,10v48c0,5.52 4.48,10 10,10h48c5.52,0 10,-4.48 10,-10V30c0,-5.52 -4.48,-10 -10,-10H30z" />
+        android:pathData="M22,22h64c6.6,0 12,5.4 12,12v52c0,6.6 -5.4,12 -12,12H22c-6.6,0 -12,-5.4 -12,-12V34c0,-6.6 5.4,-12 12,-12z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M24,24h60c5.52,0 10,4.48 10,10v50c0,5.52 -4.48,10 -10,10H24c-5.52,0 -10,-4.48 -10,-10V34c0,-5.52 4.48,-10 10,-10z" />
 
-    <!-- Sun outline -->
+    <!-- Sun -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,48m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+        android:pathData="M54,40m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
 
-    <!-- Mountain -->
+    <!-- Back mountain -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M32,68l10,-14l8,8l6,-10l12,12l8,-6l10,10H32z" />
+        android:pathData="M22,72l12,-12l10,6l8,-10l14,10l10,-8l12,14H22z" />
+
+    <!-- Front mountain -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,72l10,-8l8,4l6,-6l12,8l14,-6l10,8H28z" />
+
+    <!-- Snow cap -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,60l4,-4l4,4l-2,-1l-2,1l-2,-1z" />
+
+    <!-- Ground -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,70h64v14H22z" />
 
 </vector>
