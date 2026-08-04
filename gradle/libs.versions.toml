@@ -18,11 +18,10 @@ coil = "3.5.0"
 paging = "3.5.0"
 coroutines = "1.11.0"
 accompanist = "0.37.3"
-admob = "25.4.0"
+startio = "5.3.2"
 datastore = "1.2.1"
 splashscreen = "1.2.0"
 firebase = "34.17.0"
-constraintlayout = "2.2.2"
 junit = "4.13.2"
 mockk = "1.14.11"
 androidxTestExtJunit = "1.3.0"
@@ -86,17 +85,14 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
-# AdMob
-admob = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "admob" }
+# Start.io
+startapp = { group = "com.startapp", name = "inapp-sdk", version.ref = "startio" }
 
 # DataStore
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 # Accompanist
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
-
-# ConstraintLayout (for native ad XML layout)
-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

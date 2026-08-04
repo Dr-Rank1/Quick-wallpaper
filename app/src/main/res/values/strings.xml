@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Pazia</string>
 
-    <!-- AdMob -->
+    <!-- Ads -->
     <string name="ad_badge">Ad</string>
 
     <!-- Navigation -->

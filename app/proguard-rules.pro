@@ -28,10 +28,14 @@
 # Coil
 -dontwarn coil.**
 
-# AdMob
--keep class com.google.android.gms.ads.** { *; }
--keep class com.google.android.gms.common.** { *; }
--dontwarn com.google.android.gms.ads.**
+# Start.io
+-keep class com.startapp.** { *; }
+-keep class com.truenet.** { *; }
+-keepattributes Exceptions, InnerClasses, Signature, Deprecated, SourceFile,
+LineNumberTable, *Annotation*, EnclosingMethod
+-dontwarn android.webkit.JavascriptInterface
+-dontwarn com.startapp.**
+-dontwarn org.jetbrains.annotations.**
 
 # Enum classes (used in when expressions)
 -keepclassmembers enum * { *; }

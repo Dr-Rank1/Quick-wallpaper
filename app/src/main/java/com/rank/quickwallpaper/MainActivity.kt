@@ -13,7 +13,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.rank.quickwallpaper.ads.AppOpenAdManager
 import com.rank.quickwallpaper.ads.InterstitialAdManager
 import com.rank.quickwallpaper.ui.PaziaNavGraph
 import com.rank.quickwallpaper.ui.onboarding.OnboardingScreen
@@ -27,7 +26,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject lateinit var appOpenAdManager: AppOpenAdManager
     @Inject lateinit var interstitialAdManager: InterstitialAdManager
     @Inject lateinit var dataStore: DataStore<Preferences>
 
@@ -44,16 +42,10 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val prefs = dataStore.data.first()
             val done = prefs[SettingsViewModel.KEY_ONBOARDING_DONE] ?: false
-            val isFirst = prefs[SettingsViewModel.KEY_FIRST_LAUNCH] ?: true
 
             onboardingDone = done
             interstitialAdManager.load()
-            appOpenAdManager.fetchAd()
             isReady = true
-
-            if (!isFirst) {
-                appOpenAdManager.tryShowAd(this@MainActivity) {}
-            }
         }
 
         setContent {

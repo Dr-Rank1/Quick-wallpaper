@@ -12,7 +12,7 @@
 - **Download** — saves to `Pictures/Pazia` via MediaStore (scoped storage compliant)
 - **Favorites** — local Room DB, swipe to remove
 - **Curated Collections** — browse and view Unsplash collections
-- **AdMob** — Native (every 12 items), Interstitial (before download, 4-min cap), App Open (cold start), Rewarded (premium section)
+- **Start.io** — Native (every 12 items), Interstitial (before download, 4-min cap), Splash/App Open (cold start), Rewarded (premium section), Banner
 - **Dark mode by default**, Material You dynamic colors on Android 12+
 - **Onboarding** — 3-slide skippable intro
 
@@ -29,7 +29,7 @@
 | Local DB | Room |
 | Downloads | Android DownloadManager + BroadcastReceiver |
 | Preferences | DataStore |
-| Ads | Google AdMob |
+| Ads | Start.io |
 | Async | Coroutines + Flow |
 
 ## Setup
@@ -50,21 +50,14 @@ PEXELS_API_KEY=YOUR_KEY_HERE
 
 The key is injected at build time as `BuildConfig.PEXELS_API_KEY` by `app/build.gradle.kts`. It is never hardcoded in source code.
 
-### 3. AdMob setup
+### 3. Start.io setup
 
-1. Log into [AdMob](https://admob.google.com) with publisher ID `ca-app-pub-9418386170210711`
-2. Register the app as `com.iankamau.pazia`
-3. Create four ad units: **Native Advanced**, **Interstitial**, **App Open**, **Rewarded**
-4. Update the release `buildConfigField` entries in `app/build.gradle.kts`:
-   ```kotlin
-   buildConfigField("String", "ADMOB_NATIVE_ID",       "\"ca-app-pub-9418386170210711/YOUR_NATIVE\"")
-   buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-9418386170210711/YOUR_INTER\"")
-   buildConfigField("String", "ADMOB_APP_OPEN_ID",     "\"ca-app-pub-9418386170210711/YOUR_APPOPEN\"")
-   buildConfigField("String", "ADMOB_REWARDED_ID",     "\"ca-app-pub-9418386170210711/YOUR_REWARDED\"")
-   ```
-5. Replace `manifestPlaceholders["admobAppId"]` in `build.gradle.kts` with your real App ID.
+1. Create an account at [portal.start.io](https://portal.start.io) and register the app as `com.rank.quickwallpaper`
+2. Copy your Start.io **App ID** (e.g. `207408870`) and set it in `app/build.gradle.kts` (buildConfigField `START_APP_ID` and `manifestPlaceholders["startAppId"]`)
+3. Host the supplier list from `app-ads.txt` (repo root) at the root of your official website: `https://<your-domain>/app-ads.txt`
+4. Debug builds automatically enable Start.io test ads (`BuildConfig.DEBUG`).
 
-Debug builds use Google's test ad unit IDs automatically.
+The Start.io SDK is initialized in `PaziaApplication`; no per-format ad unit IDs are required.
 
 ### 4. Build
 
@@ -105,10 +98,10 @@ com.iankamau.pazia/
 │   └── DownloadCompleteReceiver.kt BroadcastReceiver → DownloadEventBus
 ├── service/
 │   └── WallpaperApplier.kt         WallpaperManager wrapper (Home/Lock/Both)
-├── ads/                            AppOpenAdManager, InterstitialAdManager, RewardedAdManager
+├── ads/                            InterstitialAdManager, RewardedAdManager, StartAppConfig
 ├── di/                             NetworkModule, DatabaseModule, AppModule, WorkerModule
 ├── MainActivity.kt
-└── PaziaApplication.kt             Coil setup, MobileAds init, Hilt WorkManager
+└── PaziaApplication.kt             Coil setup, Start.io init, Hilt WorkManager
 ```
 
 ## Pexels API Compliance
@@ -124,7 +117,7 @@ The app follows the Pexels API guidelines:
 
 | Permission | Purpose |
 |------------|---------|
-| `INTERNET` | API calls, image loading, AdMob |
+| `INTERNET` | API calls, image loading, Start.io |
 | `ACCESS_NETWORK_STATE` | Offline detection |
 | `SET_WALLPAPER` | Apply wallpaper (normal permission) |
 | `POST_NOTIFICATIONS` | Download progress notification (Android 13+) |
