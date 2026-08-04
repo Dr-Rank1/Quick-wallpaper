@@ -19,21 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdLoader
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.nativead.MediaView
-import com.google.android.gms.ads.nativead.NativeAd
-import com.google.android.gms.ads.nativead.NativeAdView
 import com.rank.quickwallpaper.R
-import com.rank.quickwallpaper.ads.AdIds
+import com.startapp.sdk.ads.nativead.NativeAdDetails
 
 @Composable
 fun NativeAdSlot(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val adVm: NativeAdViewModel = viewModel()
-    var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+    var nativeAd by remember { mutableStateOf<NativeAdDetails?>(null) }
 
     DisposableEffect(Unit) {
         adVm.loadAd(context)
@@ -45,53 +38,44 @@ fun NativeAdSlot(modifier: Modifier = Modifier) {
 
     AndroidView(
         modifier = modifier.fillMaxWidth().wrapContentHeight(),
-        factory = { ctx -> inflateAndBind(ctx, ad) },
-        update = { view -> bindNativeAd(view, ad) }
+        factory = { ctx -> inflateAndBind(ctx, ad) }
     )
 }
 
 @SuppressLint("InflateParams")
-private fun inflateAndBind(context: Context, ad: NativeAd): NativeAdView {
-    val view = LayoutInflater.from(context)
-        .inflate(R.layout.native_ad_grid_item, null) as NativeAdView
+private fun inflateAndBind(context: Context, ad: NativeAdDetails): View {
+    val view = LayoutInflater.from(context).inflate(R.layout.native_ad_grid_item, null)
     bindNativeAd(view, ad)
     return view
 }
 
-private fun bindNativeAd(adView: NativeAdView, ad: NativeAd) {
-    val headlineView = adView.findViewById<TextView>(R.id.ad_headline)
-    headlineView.text = ad.headline
-    adView.headlineView = headlineView
+private fun bindNativeAd(view: View, ad: NativeAdDetails) {
+    val headlineView = view.findViewById<TextView>(R.id.ad_headline)
+    headlineView.text = ad.title
 
-    val bodyView = adView.findViewById<TextView>(R.id.ad_body)
-    if (ad.body != null) {
-        bodyView.text = ad.body
+    val bodyView = view.findViewById<TextView>(R.id.ad_body)
+    if (ad.description.isNotBlank()) {
+        bodyView.text = ad.description
         bodyView.visibility = View.VISIBLE
     } else {
         bodyView.visibility = View.GONE
     }
-    adView.bodyView = bodyView
 
-    val iconView = adView.findViewById<ImageView>(R.id.ad_app_icon)
-    if (ad.icon != null) {
-        iconView.setImageDrawable(ad.icon!!.drawable)
-        iconView.visibility = View.VISIBLE
+    val mediaView = view.findViewById<ImageView>(R.id.ad_media)
+    if (ad.imageBitmap != null) {
+        mediaView.setImageBitmap(ad.imageBitmap)
+        mediaView.visibility = View.VISIBLE
     } else {
-        iconView.visibility = View.GONE
+        mediaView.visibility = View.GONE
     }
-    adView.iconView = iconView
 
-    val mediaView = adView.findViewById<MediaView>(R.id.ad_media)
-    adView.mediaView = mediaView
-
-    val ctaView = adView.findViewById<Button>(R.id.ad_call_to_action)
-    if (ad.callToAction != null) {
+    val ctaView = view.findViewById<Button>(R.id.ad_call_to_action)
+    if (ad.callToAction.isNotBlank()) {
         ctaView.text = ad.callToAction
         ctaView.visibility = View.VISIBLE
     } else {
         ctaView.visibility = View.GONE
     }
-    adView.callToActionView = ctaView
 
-    adView.setNativeAd(ad)
+    ad.registerViewForInteraction(view)
 }

@@ -12,7 +12,8 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
-import com.google.android.gms.ads.MobileAds
+import com.rank.quickwallpaper.ads.StartAppConfig
+import com.startapp.sdk.adsbase.StartAppSDK
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 import okio.Path.Companion.toOkioPath
@@ -32,7 +33,14 @@ class PaziaApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         setupCoil()
-        MobileAds.initialize(this)
+        initStartApp()
+    }
+
+    private fun initStartApp() {
+        if (BuildConfig.DEBUG) StartAppSDK.setTestAdsEnabled(true)
+        StartAppSDK.initParams(this, StartAppConfig.APP_ID)
+            .setCallback { }
+            .init()
     }
 
     private fun setupCoil() {

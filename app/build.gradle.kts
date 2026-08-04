@@ -20,7 +20,7 @@ android {
     defaultConfig {
         applicationId = "com.rank.quickwallpaper"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 13
         versionName = "1.0.6"
 
@@ -32,6 +32,9 @@ android {
             "PEXELS_API_KEY",
             "\"${localProps.getProperty("PEXELS_API_KEY", "YOUR_KEY_HERE")}\""
         )
+
+        manifestPlaceholders["startAppId"] = "207408870"
+        buildConfigField("String", "START_APP_ID", "\"207408870\"")
 
     }
 
@@ -50,24 +53,12 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
-            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
-            buildConfigField("String", "ADMOB_BANNER_ID",       "\"ca-app-pub-3940256099942544/6300978111\"")
-            buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
-            buildConfigField("String", "ADMOB_NATIVE_ID",       "\"ca-app-pub-3940256099942544/2247696110\"")
-            buildConfigField("String", "ADMOB_APP_OPEN_ID",     "\"ca-app-pub-3940256099942544/9257395921\"")
-            buildConfigField("String", "ADMOB_REWARDED_ID",     "\"ca-app-pub-3940256099942544/5224354917\"")
         }
         release {
             signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
-            buildConfigField("String", "ADMOB_BANNER_ID",       "\"ca-app-pub-3940256099942544/6300978111\"")
-            buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
-            buildConfigField("String", "ADMOB_NATIVE_ID",       "\"ca-app-pub-3940256099942544/2247696110\"")
-            buildConfigField("String", "ADMOB_APP_OPEN_ID",     "\"ca-app-pub-3940256099942544/9257395921\"")
-            buildConfigField("String", "ADMOB_REWARDED_ID",     "\"ca-app-pub-3940256099942544/5224354917\"")
         }
     }
 
@@ -142,9 +133,8 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
-    // AdMob
-    implementation(libs.admob)
-    implementation(libs.constraintlayout)
+    // Start.io
+    implementation(libs.startapp)
 
     // DataStore
     implementation(libs.datastore.preferences)
