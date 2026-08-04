@@ -51,7 +51,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -77,7 +78,7 @@ import com.rank.quickwallpaper.ui.search.SearchScreen
 import com.rank.quickwallpaper.ui.settings.SettingsScreen
 
 private const val ANIM_DURATION = 300
-private const val EXPANDED_WIDTH_DP = 840
+private val EXPANDED_WIDTH_DP = 840.dp
 
 sealed class Screen(
     val route: String,
@@ -142,8 +143,9 @@ fun PaziaNavGraph(startDestination: String = Screen.Home.route) {
     val currentDestination = navBackStack?.destination
     val showBottomBar = currentDestination?.route in bottomRoutes
 
-    val config = LocalConfiguration.current
-    val isExpandedScreen = config.screenWidthDp >= EXPANDED_WIDTH_DP
+    val isExpandedScreen = with(LocalDensity.current) {
+        LocalWindowInfo.current.containerSize.width.toDp() >= EXPANDED_WIDTH_DP
+    }
 
     val onNavigate: (Screen) -> Unit = { screen ->
         if (navController.currentDestination?.route != screen.route) {

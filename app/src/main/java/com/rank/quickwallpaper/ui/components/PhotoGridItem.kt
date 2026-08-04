@@ -32,9 +32,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import coil.size.Scale
+import androidx.core.graphics.toColorInt
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Scale
 import com.rank.quickwallpaper.domain.model.Photo
 
 private val cardShape = RoundedCornerShape(12.dp)
@@ -48,7 +50,7 @@ fun PhotoGridItem(
     val context = LocalContext.current
     val placeholderColor = remember(photo.color) {
         runCatching {
-            Color(android.graphics.Color.parseColor(photo.color ?: "#1E1E1E"))
+            Color(photo.color.orEmpty().toColorInt())
         }.getOrDefault(Color(0xFF1E1E1E))
     }
 

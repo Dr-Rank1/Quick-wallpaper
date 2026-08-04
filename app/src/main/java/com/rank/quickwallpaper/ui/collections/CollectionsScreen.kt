@@ -33,8 +33,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import androidx.core.graphics.toColorInt
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import coil3.compose.AsyncImage
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Collection
 import com.rank.quickwallpaper.ui.components.ErrorState
@@ -108,7 +109,7 @@ private fun CollectionCard(
     modifier: Modifier = Modifier
 ) {
     val placeholderColor = runCatching {
-        Color(android.graphics.Color.parseColor(collection.coverColor ?: "#1E1E1E"))
+        Color(collection.coverColor.orEmpty().toColorInt())
     }.getOrDefault(Color(0xFF1E1E1E))
 
     Box(

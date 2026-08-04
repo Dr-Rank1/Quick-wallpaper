@@ -42,8 +42,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import androidx.core.graphics.toColorInt
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import coil3.compose.AsyncImage
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.data.local.entities.FavoriteEntity
 import com.rank.quickwallpaper.ui.theme.PaziaAccent
@@ -179,7 +180,7 @@ private fun SwipeToDeleteFavorite(
     ) {
         val aspectRatio = favorite.width.toFloat() / favorite.height.toFloat()
         val placeholderColor = runCatching {
-            Color(android.graphics.Color.parseColor(favorite.color ?: "#1E1E1E"))
+            Color(favorite.color.orEmpty().toColorInt())
         }.getOrDefault(Color(0xFF1E1E1E))
 
         Box(

@@ -64,8 +64,6 @@
 
     <!-- Settings -->
     <string name="settings_appearance">Appearance</string>
-    <string name="settings_dark_mode">Dark Mode</string>
-    <string name="settings_dark_mode_desc">Use dark background (recommended for AMOLED)</string>
     <string name="settings_dynamic_colors">Material You Colors</string>
     <string name="settings_dynamic_colors_desc">Apply wallpaper-derived colors (Android 12+)</string>
     <string name="settings_about">About</string>

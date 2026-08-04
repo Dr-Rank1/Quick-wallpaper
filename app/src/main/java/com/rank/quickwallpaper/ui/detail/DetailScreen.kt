@@ -81,12 +81,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.size.Scale
-import coil.size.Size
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Scale
+import coil3.size.Size
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -119,6 +122,14 @@ fun DetailScreen(
     val haptics = LocalHapticFeedback.current
     var showCheckmark by remember { mutableStateOf(false) }
 
+    val wallpaperSetSuccessMsg = stringResource(R.string.wallpaper_set_success)
+    val downloadInProgressMsg = stringResource(R.string.download_in_progress)
+    val downloadSuccessMsg = stringResource(R.string.download_success)
+    val downloadFailedMsg = stringResource(R.string.download_failed)
+    val actionOpenLabel = stringResource(R.string.action_open)
+    val actionRetryLabel = stringResource(R.string.action_retry)
+    val alreadyDownloadedMsg = stringResource(R.string.already_downloaded)
+
     val notifPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         rememberPermissionState(android.Manifest.permission.POST_NOTIFICATIONS)
     } else null
@@ -126,7 +137,7 @@ fun DetailScreen(
     LaunchedEffect(wallpaperState) {
         when (val state = wallpaperState) {
             is WallpaperState.Success -> {
-                snackbarHost.showSnackbar(context.getString(R.string.wallpaper_set_success))
+                snackbarHost.showSnackbar(wallpaperSetSuccessMsg)
                 viewModel.resetWallpaperState()
             }
             is WallpaperState.Error -> {
@@ -141,7 +152,7 @@ fun DetailScreen(
         when (val state = downloadState) {
             DownloadState.InProgress -> {
                 snackbarHost.showSnackbar(
-                    message = context.getString(R.string.download_in_progress),
+                    message = downloadInProgressMsg,
                     duration = SnackbarDuration.Indefinite
                 )
             }
@@ -150,8 +161,8 @@ fun DetailScreen(
                 showCheckmark = true
                 scope.launch {
                     val result = snackbarHost.showSnackbar(
-                        message = context.getString(R.string.download_success),
-                        actionLabel = context.getString(R.string.action_open),
+                        message = downloadSuccessMsg,
+                        actionLabel = actionOpenLabel,
                         duration = SnackbarDuration.Long
                     )
                     if (result == SnackbarResult.ActionPerformed) {
@@ -164,8 +175,8 @@ fun DetailScreen(
             }
             DownloadState.Failed -> {
                 val result = snackbarHost.showSnackbar(
-                    message = context.getString(R.string.download_failed),
-                    actionLabel = context.getString(R.string.action_retry),
+                    message = downloadFailedMsg,
+                    actionLabel = actionRetryLabel,
                     duration = SnackbarDuration.Long
                 )
                 if (result == SnackbarResult.ActionPerformed) {
@@ -224,7 +235,7 @@ fun DetailScreen(
                     var offsetY by remember { mutableFloatStateOf(0f) }
 
                     val placeholderColor = runCatching {
-                        Color(android.graphics.Color.parseColor(photo.color ?: "#1E1E1E"))
+                        Color(photo.color.orEmpty().toColorInt())
                     }.getOrDefault(Color(0xFF1E1E1E))
 
                     AsyncImage(
@@ -315,7 +326,7 @@ fun DetailScreen(
                             onClick = {
                                 val intent = Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse(photo.photographer.profileUrl)
+                                    photo.photographer.profileUrl.toUri()
                                 )
                                 context.startActivity(intent)
                             },
@@ -391,8 +402,8 @@ fun DetailScreen(
                                             scope.launch {
                                                 val uri = viewModel.findDownloadedUri()
                                                 val result = snackbarHost.showSnackbar(
-                                                    message = context.getString(R.string.already_downloaded),
-                                                    actionLabel = if (uri != null) context.getString(R.string.action_open) else null,
+                                                    message = alreadyDownloadedMsg,
+                                                    actionLabel = if (uri != null) actionOpenLabel else null,
                                                     duration = SnackbarDuration.Short
                                                 )
                                                 if (result == SnackbarResult.ActionPerformed && uri != null) {

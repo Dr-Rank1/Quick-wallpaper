@@ -4,6 +4,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,7 +25,7 @@ class WallpaperDownloader @Inject constructor(
 
     fun enqueue(photoUrl: String, photoId: String, photographer: String): Long {
         val filename = "pazia_$photoId.jpg"
-        val request = DownloadManager.Request(Uri.parse(photoUrl))
+        val request = DownloadManager.Request(photoUrl.toUri())
             .setTitle("Pazia wallpaper")
             .setDescription("Photo by $photographer")
             .setMimeType("image/jpeg")

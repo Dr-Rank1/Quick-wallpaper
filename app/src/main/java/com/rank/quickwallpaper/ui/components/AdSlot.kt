@@ -46,7 +46,7 @@ fun NativeAdSlot(modifier: Modifier = Modifier) {
     AndroidView(
         modifier = modifier.fillMaxWidth().wrapContentHeight(),
         factory = { ctx -> inflateAndBind(ctx, ad) },
-        update = { view -> bindNativeAd(view as? NativeAdView ?: return@AndroidView, ad) }
+        update = { view -> bindNativeAd(view, ad) }
     )
 }
 

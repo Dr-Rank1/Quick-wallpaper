@@ -62,9 +62,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.core.net.toUri
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.imageLoader
+import coil3.imageLoader
 import com.rank.quickwallpaper.BuildConfig
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.ui.theme.PaziaAccent
@@ -73,7 +74,7 @@ import com.rank.quickwallpaper.ui.theme.PaziaBorderLight
 import com.rank.quickwallpaper.ui.theme.PaziaOverlayLight
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, coil.annotation.ExperimentalCoilApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, coil3.annotation.ExperimentalCoilApi::class)
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
@@ -83,6 +84,9 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val cacheClearedMsg = stringResource(R.string.settings_cache_cleared)
+    val shareTextMsg = stringResource(R.string.settings_share_text)
+    val resetDoneMsg = stringResource(R.string.settings_reset_done)
 
     Scaffold(
         topBar = {
@@ -178,7 +182,7 @@ fun SettingsScreen(
                         scope.launch {
                             context.imageLoader.diskCache?.clear()
                             context.imageLoader.memoryCache?.clear()
-                            snackbarHostState.showSnackbar(context.getString(R.string.settings_cache_cleared))
+                            snackbarHostState.showSnackbar(cacheClearedMsg)
                         }
                     }
                 )
@@ -198,14 +202,14 @@ fun SettingsScreen(
                             context.startActivity(
                                 Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse("market://details?id=${context.packageName}")
+                                    "market://details?id=${context.packageName}".toUri()
                                 )
                             )
                         }.onFailure {
                             context.startActivity(
                                 Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+                                    "https://play.google.com/store/apps/details?id=${context.packageName}".toUri()
                                 )
                             )
                         }
@@ -223,7 +227,7 @@ fun SettingsScreen(
                                     type = "text/plain"
                                     putExtra(
                                         Intent.EXTRA_TEXT,
-                                        context.getString(R.string.settings_share_text)
+                                        shareTextMsg
                                     )
                                 },
                                 null
@@ -258,7 +262,7 @@ fun SettingsScreen(
                     titleColor = PaziaAccent,
                     onClick = {
                         context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pexels.com/license/"))
+                            Intent(Intent.ACTION_VIEW, "https://www.pexels.com/license/".toUri())
                         )
                     }
                 )
@@ -272,7 +276,7 @@ fun SettingsScreen(
                         viewModel.setDarkTheme(true)
                         viewModel.setDynamicColors(true)
                         viewModel.setDownloadQuality(DownloadQuality.FULL)
-                        snackbarHostState.showSnackbar(context.getString(R.string.settings_reset_done))
+                        snackbarHostState.showSnackbar(resetDoneMsg)
                     }
                 },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -296,7 +300,7 @@ fun SettingsScreen(
                         indication = null
                     ) {
                         context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pexels.com"))
+                            Intent(Intent.ACTION_VIEW, "https://www.pexels.com".toUri())
                         )
                     },
                 verticalAlignment = Alignment.CenterVertically
