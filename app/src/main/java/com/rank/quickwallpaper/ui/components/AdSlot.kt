@@ -21,6 +21,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rank.quickwallpaper.R
 import com.startapp.sdk.ads.nativead.NativeAdDetails
+import java.util.Locale
 
 @Composable
 fun NativeAdSlot(modifier: Modifier = Modifier) {
@@ -75,6 +76,23 @@ private fun bindNativeAd(view: View, ad: NativeAdDetails) {
         ctaView.visibility = View.VISIBLE
     } else {
         ctaView.visibility = View.GONE
+    }
+
+    val metaRow = view.findViewById<View>(R.id.ad_meta_row)
+    val ratingView = view.findViewById<TextView>(R.id.ad_rating)
+    val categoryView = view.findViewById<TextView>(R.id.ad_category)
+
+    val ratingText = if (ad.rating > 0f) String.format(Locale.US, "★ %.1f", ad.rating) else null
+    val categoryText = ad.category.takeIf { it.isNotBlank() }
+
+    if (ratingText == null && categoryText == null) {
+        metaRow.visibility = View.GONE
+    } else {
+        metaRow.visibility = View.VISIBLE
+        ratingView.text = ratingText
+        ratingView.visibility = if (ratingText != null) View.VISIBLE else View.GONE
+        categoryView.text = if (categoryText != null && ratingText != null) " · $categoryText" else categoryText
+        categoryView.visibility = if (categoryText != null) View.VISIBLE else View.GONE
     }
 
     ad.registerViewForInteraction(view)

@@ -2,6 +2,7 @@ package com.rank.quickwallpaper.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +42,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.rank.quickwallpaper.R
+import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import com.rank.quickwallpaper.ui.components.ErrorState
 import com.rank.quickwallpaper.ui.components.NativeAdSlot
 import com.rank.quickwallpaper.ui.components.PhotoGridItem
@@ -80,75 +82,88 @@ fun HomeScreen(
         },
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = { photos.refresh() },
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when {
-                photos.loadState.refresh is LoadState.Error -> {
-                    val error = (photos.loadState.refresh as LoadState.Error).error
-                    ErrorState(
-                        message = error.localizedMessage ?: stringResource(R.string.error_load),
-                        onRetry = { photos.retry() },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                else -> {
-                    LazyVerticalStaggeredGrid(
-                        columns = StaggeredGridCells.Fixed(2),
-                        contentPadding = PaddingValues(
-                            start = 12.dp, end = 12.dp,
-                            top = 4.dp, bottom = 16.dp
-                        ),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalItemSpacing = 10.dp,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        if (photos.loadState.refresh is LoadState.Loading) {
-                            item(span = StaggeredGridItemSpan.FullLine) {
-                                ShimmerGrid(count = 6)
-                            }
-                        } else {
-                            items(
-                                count = photos.itemCount,
-                                key = photos.itemKey { it.id }
-                            ) { index ->
-                                val photo = photos[index] ?: return@items
-                                PhotoGridItem(
-                                    photo = photo,
-                                    onClick = { onPhotoClick(photo.id) }
-                                )
-                            }
+            Box(modifier = Modifier.weight(1f)) {
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { photos.refresh() },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    when {
+                        photos.loadState.refresh is LoadState.Error -> {
+                            val error = (photos.loadState.refresh as LoadState.Error).error
+                            ErrorState(
+                                message = error.localizedMessage ?: stringResource(R.string.error_load),
+                                onRetry = { photos.retry() },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        else -> {
+                            LazyVerticalStaggeredGrid(
+                                columns = StaggeredGridCells.Fixed(2),
+                                contentPadding = PaddingValues(
+                                    start = 12.dp, end = 12.dp,
+                                    top = 4.dp, bottom = 16.dp
+                                ),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalItemSpacing = 10.dp,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                if (photos.loadState.refresh is LoadState.Loading) {
+                                    item(span = StaggeredGridItemSpan.FullLine) {
+                                        ShimmerGrid(count = 6)
+                                    }
+                                } else {
+                                    items(
+                                        count = photos.itemCount,
+                                        key = photos.itemKey { it.id }
+                                    ) { index ->
+                                        val photo = photos[index] ?: return@items
+                                        PhotoGridItem(
+                                            photo = photo,
+                                            onClick = { onPhotoClick(photo.id) }
+                                        )
+                                    }
 
-                            if (photos.itemCount > 0 && photos.itemCount % AD_INTERVAL == 0 &&
-                                photos.loadState.append !is LoadState.Loading) {
-                                item(span = StaggeredGridItemSpan.FullLine) {
-                                    NativeAdSlot(Modifier.padding(vertical = 4.dp))
-                                }
-                            }
+                                    if (photos.itemCount > 0 && photos.itemCount % AD_INTERVAL == 0 &&
+                                        photos.loadState.append !is LoadState.Loading) {
+                                        item(span = StaggeredGridItemSpan.FullLine) {
+                                            NativeAdSlot(Modifier.padding(vertical = 4.dp))
+                                        }
+                                    }
 
-                            if (photos.loadState.append is LoadState.Loading) {
-                                item(span = StaggeredGridItemSpan.FullLine) {
-                                    Box(Modifier.padding(8.dp)) { ShimmerGrid(count = 2) }
-                                }
-                            }
+                                    if (photos.loadState.append is LoadState.Loading) {
+                                        item(span = StaggeredGridItemSpan.FullLine) {
+                                            Box(Modifier.padding(8.dp)) { ShimmerGrid(count = 2) }
+                                        }
+                                    }
 
-                            if (photos.loadState.append is LoadState.Error) {
-                                item(span = StaggeredGridItemSpan.FullLine) {
-                                    val error = (photos.loadState.append as LoadState.Error).error
-                                    ErrorState(
-                                        message = error.localizedMessage ?: stringResource(R.string.error_load),
-                                        onRetry = { photos.retry() }
-                                    )
+                                    if (photos.loadState.append is LoadState.Error) {
+                                        item(span = StaggeredGridItemSpan.FullLine) {
+                                            val error = (photos.loadState.append as LoadState.Error).error
+                                            ErrorState(
+                                                message = error.localizedMessage ?: stringResource(R.string.error_load),
+                                                onRetry = { photos.retry() }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+
+            BannerAdSlot(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 72.dp)
+            )
         }
     }
 }

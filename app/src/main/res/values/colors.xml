@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="pazia_black">#0A0A0A</color>
+    <color name="pazia_card">#151820</color>
+    <color name="pazia_card_elevated">#1A1D26</color>
+    <color name="pazia_accent">#6C63FF</color>
+    <color name="pazia_accent_light">#9D97FF</color>
+    <color name="pazia_white">#EEEEF0</color>
+    <color name="pazia_gray_light">#8A8D98</color>
+    <color name="pazia_border_light">#0DFFFFFF</color>
+    <color name="pazia_overlay_light">#08FFFFFF</color>
 </resources>

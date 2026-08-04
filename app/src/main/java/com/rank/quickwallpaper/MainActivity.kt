@@ -14,6 +14,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.rank.quickwallpaper.ads.InterstitialAdManager
+import com.rank.quickwallpaper.ads.RewardedAdManager
 import com.rank.quickwallpaper.ui.PaziaNavGraph
 import com.rank.quickwallpaper.ui.onboarding.OnboardingScreen
 import com.rank.quickwallpaper.ui.settings.SettingsViewModel
@@ -27,6 +28,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var interstitialAdManager: InterstitialAdManager
+    @Inject lateinit var rewardedAdManager: RewardedAdManager
     @Inject lateinit var dataStore: DataStore<Preferences>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +47,7 @@ class MainActivity : ComponentActivity() {
 
             onboardingDone = done
             interstitialAdManager.load()
+            rewardedAdManager.load()
             isReady = true
         }
 
@@ -69,6 +72,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        interstitialAdManager.onForegrounded()
     }
 
 }

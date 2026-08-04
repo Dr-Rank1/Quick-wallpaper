@@ -4,6 +4,7 @@
 
     <!-- Ads -->
     <string name="ad_badge">Ad</string>
+    <string name="rewarded_set_both">Watch ad &amp; set both screens</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
