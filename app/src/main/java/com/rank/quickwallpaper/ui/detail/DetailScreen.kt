@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
@@ -114,6 +115,7 @@ fun DetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val wallpaperState by viewModel.wallpaperState.collectAsStateWithLifecycle()
     val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
+    val rewardedReady by viewModel.rewardedReady.collectAsStateWithLifecycle()
     val snackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showWallpaperSheet by remember { mutableStateOf(false) }
@@ -498,6 +500,33 @@ fun DetailScreen(
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+
+                        Button(
+                            onClick = {
+                                val activity = context as? ComponentActivity ?: return@Button
+                                viewModel.triggerRewardedSet(activity)
+                            },
+                            enabled = rewardedReady,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PaziaAccent.copy(alpha = 0.18f),
+                                contentColor = PaziaAccentLight
+                            )
+                        ) {
+                            Icon(
+                                Icons.Filled.Bolt,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.rewarded_set_both),
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }

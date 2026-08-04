@@ -11,6 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val FREQUENCY_CAP_MS = 4 * 60 * 1000L
+private const val MIN_FOREGROUND_MS = 30 * 1000L
 
 @Singleton
 class InterstitialAdManager @Inject constructor(
@@ -18,7 +19,13 @@ class InterstitialAdManager @Inject constructor(
 ) {
     private var interstitialAd: StartAppAd? = null
     private var lastShownTime = 0L
-    private var isFirstTime = true
+    private var foregroundSinceMs = System.currentTimeMillis()
+    private var sessionShown = false
+
+    fun onForegrounded() {
+        foregroundSinceMs = System.currentTimeMillis()
+        sessionShown = false
+    }
 
     fun load() {
         if (interstitialAd != null) return
@@ -31,17 +38,17 @@ class InterstitialAdManager @Inject constructor(
 
     fun maybeShow(activity: Activity, onDone: () -> Unit) {
         val now = System.currentTimeMillis()
-        val canShow = !isFirstTime &&
+        val canShow = !sessionShown &&
             interstitialAd != null &&
+            (now - foregroundSinceMs) >= MIN_FOREGROUND_MS &&
             (now - lastShownTime) >= FREQUENCY_CAP_MS
 
         if (!canShow) {
-            isFirstTime = false
             onDone()
             return
         }
 
-        isFirstTime = false
+        sessionShown = true
         val current = interstitialAd ?: run { onDone(); return }
         current.showAd(object : AdDisplayListener {
             override fun adHidden(ad: Ad) {

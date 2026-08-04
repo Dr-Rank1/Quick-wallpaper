@@ -13,6 +13,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rank.quickwallpaper.ads.InterstitialAdManager
+import com.rank.quickwallpaper.ads.RewardedAdManager
 import com.rank.quickwallpaper.data.repository.PhotoRepository
 import com.rank.quickwallpaper.domain.model.Photo
 import com.rank.quickwallpaper.download.DownloadEventBus
@@ -66,6 +67,7 @@ class DetailViewModel @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     private val wallpaperDownloader: WallpaperDownloader,
     private val interstitialAdManager: InterstitialAdManager,
+    private val rewardedAdManager: RewardedAdManager,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -89,6 +91,8 @@ class DetailViewModel @Inject constructor(
     private var currentDownloadId: Long? = null
     private var loadJob: Job? = null
 
+    val rewardedReady: StateFlow<Boolean> = rewardedAdManager.ready
+
     companion object {
         private val KEY_DOWNLOADED_IDS = stringSetPreferencesKey("downloaded_photo_ids")
     }
@@ -97,6 +101,7 @@ class DetailViewModel @Inject constructor(
         loadPhoto()
         checkIfAlreadyDownloaded()
         observeDownloadCompletion()
+        rewardedAdManager.load()
     }
 
     private fun checkIfAlreadyDownloaded() {
@@ -223,6 +228,15 @@ class DetailViewModel @Inject constructor(
                     _wallpaperState.value = WallpaperState.Error(e.message ?: "Failed to apply")
                 }
         }
+    }
+
+    fun triggerRewardedSet(activity: Activity) {
+        if (_uiState.value !is DetailUiState.Success) return
+        rewardedAdManager.show(
+            activity = activity,
+            onRewarded = { applyWallpaper(WallpaperTarget.BOTH) },
+            onDismissed = {}
+        )
     }
 
     fun resetWallpaperState() {
