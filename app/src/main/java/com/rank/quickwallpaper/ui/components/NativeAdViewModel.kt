@@ -34,7 +34,6 @@ class NativeAdViewModel : ViewModel() {
     }
 
     override fun onCleared() {
-        super.onCleared()
         _nativeAd?.destroy()
         _nativeAd = null
     }

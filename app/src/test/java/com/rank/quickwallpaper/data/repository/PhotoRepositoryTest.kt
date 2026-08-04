@@ -5,6 +5,7 @@ import com.rank.quickwallpaper.data.remote.PexelsApi
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class PhotoRepositoryTest {
@@ -17,6 +18,6 @@ class PhotoRepositoryTest {
     @Test
     fun `repository creates without crash`() {
         val repo = PhotoRepository(api, dao)
-        assert(repo.getEditorialFeed() is kotlinx.coroutines.flow.Flow)
+        assertNotNull(repo.getEditorialFeed())
     }
 }

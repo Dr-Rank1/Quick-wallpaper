@@ -5,9 +5,11 @@ import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import coil.Coil
-import coil.request.ImageRequest
-import coil.request.SuccessResult
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
+import coil3.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -72,8 +74,8 @@ class WallpaperApplier @Inject constructor(
             .data(url)
             .allowHardware(false)
             .build()
-        val result = Coil.imageLoader(context).execute(request)
+        val result = SingletonImageLoader.get(context).execute(request)
         if (result !is SuccessResult) throw IOException("Failed to load wallpaper image: ${url.take(80)}")
-        return (result.drawable as BitmapDrawable).bitmap
+        return result.image.toBitmap()
     }
 }

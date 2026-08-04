@@ -13,6 +13,9 @@
     <string name="nav_settings">Mipangilio</string>
     <string name="collections">Mikusanyo</string>
 
+    <!-- Home -->
+    <string name="random_wallpaper">Picha ya ukuta ya nasibu</string>
+
     <!-- Search -->
     <string name="search_hint">Tafuta picha za ukuta…</string>
     <string name="search_prompt">Andika kutafuta mamilioni ya picha</string>
@@ -62,8 +65,6 @@
 
     <!-- Settings -->
     <string name="settings_appearance">Muonekano</string>
-    <string name="settings_dark_mode">Hali ya Giza</string>
-    <string name="settings_dark_mode_desc">Tumia mandhari ya giza (inapendekezwa kwa AMOLED)</string>
     <string name="settings_dynamic_colors">Rangi za Material You</string>
     <string name="settings_dynamic_colors_desc">Tumia rangi zinazotokana na mwandiko (Android 12+)</string>
     <string name="settings_about">Kuhusu</string>
