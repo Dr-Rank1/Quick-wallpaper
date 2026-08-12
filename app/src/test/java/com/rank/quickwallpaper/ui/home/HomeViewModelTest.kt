@@ -47,6 +47,9 @@ class HomeViewModelTest {
 
     private val repo = mockk<PhotoRepository> {
         every { getEditorialFeed() } returns flowOf(PagingData.empty<Photo>())
+        every { observeFavoriteIds() } returns flowOf(emptyList())
+        every { observeHistory() } returns flowOf(emptyList())
+        coEvery { getWallpaperOfTheDay() } returns Result.success(samplePhoto)
     }
 
     @Before

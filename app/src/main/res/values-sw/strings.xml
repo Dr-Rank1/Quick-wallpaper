@@ -67,8 +67,6 @@
 
     <!-- Settings -->
     <string name="settings_appearance">Muonekano</string>
-    <string name="settings_skins">Ngozi</string>
-    <string name="settings_skins_desc">Badilisha rangi, fonti, na maumbo ya programu</string>
     <string name="settings_dark_theme">Mandhari meusi</string>
     <string name="settings_dark_theme_desc">Tumia muonekano wa giza katika programu</string>
     <string name="settings_dynamic_colors">Rangi za Material You</string>
@@ -104,4 +102,46 @@
     <string name="settings_reset">Weka kwenye msingi</string>
     <string name="settings_reset_done">Mpangilio umerejeshwa kwenye msingi</string>
     <string name="settings_powered_by">Inaendeshwa na Pexels</string>
+
+    <!-- Widget -->
+    <string name="widget_shuffle_label">Picha ya nasibu</string>
+    <string name="widget_shuffle_desc">Weka picha ya nasibu kutoka vipendwa au mkondo</string>
+
+    <!-- Collections / Home -->
+    <string name="collections_browse">Mikusanyo</string>
+    <string name="wallpaper_of_day">Picha ya Siku</string>
+    <string name="recently_viewed">Zilizotazamwa hivi karibuni</string>
+    <string name="similar_photos">Picha zinazofanana</string>
+
+    <!-- Search vibes -->
+    <string name="vibe_dark">Giza</string>
+    <string name="vibe_blue">Bluu</string>
+    <string name="vibe_pastel">Pastel</string>
+    <string name="vibe_neon">Neon</string>
+    <string name="vibe_gold">Dhahabu</string>
+    <string name="vibe_bw">Nyeusi na Nyeupe</string>
+    <string name="vibe_sunset">Machweo</string>
+    <string name="vibe_ocean">Bahari</string>
+
+    <!-- Wallpaper fit -->
+    <string name="wallpaper_fit">Ujazo wa picha</string>
+    <string name="wallpaper_fit_desc">Jinsi picha zinavyojaza skrini yako</string>
+    <string name="fit_fill">Jaza</string>
+    <string name="fit_fit">Lingana</string>
+    <string name="fit_stretch">Nyosha</string>
+
+    <!-- Auto-change -->
+    <string name="auto_change">Badilisha picha kiotomatiki</string>
+    <string name="auto_change_desc">Badilisha picha ya ukuta kwa ratiba</string>
+    <string name="auto_change_hours">Badilisha kila</string>
+
+    <!-- Ads / history / favorites -->
+    <string name="ads_removed">Matangazo</string>
+    <string name="ads_removed_active">Matangazo yameondolewa</string>
+    <string name="unlock_ads">Tazama tangazo kuondoa matangazo</string>
+    <string name="unlock_ads_desc">Tazama video fupi ya zawadi kuficha mabango na matangazo asilia</string>
+    <string name="download_all">Pakua zote</string>
+    <string name="clear_history">Futa historia ya kutazama</string>
+    <string name="clear_history_desc">Ondoa picha zilizotazamwa hivi karibuni</string>
+    <string name="history_cleared">Historia ya kutazama imefutwa</string>
 </resources>

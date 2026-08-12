@@ -16,5 +16,19 @@ data class FavoriteEntity(
     val height: Int,
     val color: String?,
     val downloadLocation: String,
+    val localCachedPath: String = "",
     val savedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "history")
+data class HistoryEntity(
+    @PrimaryKey val id: String,
+    val thumbUrl: String,
+    val regularUrl: String,
+    val fullUrl: String,
+    val photographerName: String,
+    val color: String?,
+    val width: Int,
+    val height: Int,
+    val viewedAt: Long = System.currentTimeMillis()
 )

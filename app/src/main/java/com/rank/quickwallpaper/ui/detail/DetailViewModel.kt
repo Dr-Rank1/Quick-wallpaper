@@ -3,8 +3,10 @@ package com.rank.quickwallpaper.ui.detail
 import android.app.Activity
 import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -12,14 +14,21 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
+import coil3.toBitmap
 import com.rank.quickwallpaper.ads.InterstitialAdManager
 import com.rank.quickwallpaper.ads.RewardedAdManager
+import com.rank.quickwallpaper.data.local.FavoriteOfflineCache
 import com.rank.quickwallpaper.data.repository.PhotoRepository
 import com.rank.quickwallpaper.domain.model.Photo
 import com.rank.quickwallpaper.download.DownloadEventBus
 import com.rank.quickwallpaper.download.DownloadStatus
 import com.rank.quickwallpaper.download.WallpaperDownloader
 import com.rank.quickwallpaper.service.WallpaperApplier
+import com.rank.quickwallpaper.service.WallpaperFit
 import com.rank.quickwallpaper.service.WallpaperTarget
 import com.rank.quickwallpaper.ui.settings.DownloadQuality
 import com.rank.quickwallpaper.ui.settings.SettingsViewModel
@@ -36,6 +45,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 sealed class DetailUiState {
@@ -68,6 +79,7 @@ class DetailViewModel @Inject constructor(
     private val wallpaperDownloader: WallpaperDownloader,
     private val interstitialAdManager: InterstitialAdManager,
     private val rewardedAdManager: RewardedAdManager,
+    private val offlineCache: FavoriteOfflineCache,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -82,11 +94,24 @@ class DetailViewModel @Inject constructor(
     private val _downloadState = MutableStateFlow<DownloadState>(DownloadState.Idle)
     val downloadState: StateFlow<DownloadState> = _downloadState
 
+    private val _similar = MutableStateFlow<List<Photo>>(emptyList())
+    val similar: StateFlow<List<Photo>> = _similar
+
     val downloadQuality: StateFlow<DownloadQuality> = dataStore.data.map { prefs ->
         prefs[SettingsViewModel.KEY_DOWNLOAD_QUALITY]
             ?.let { runCatching { DownloadQuality.valueOf(it) }.getOrDefault(DownloadQuality.FULL) }
             ?: DownloadQuality.FULL
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DownloadQuality.FULL)
+
+    val wallpaperFit: StateFlow<WallpaperFit> = dataStore.data.map { prefs ->
+        prefs[SettingsViewModel.KEY_WALLPAPER_FIT]
+            ?.let { runCatching { WallpaperFit.valueOf(it) }.getOrDefault(WallpaperFit.FILL) }
+            ?: WallpaperFit.FILL
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WallpaperFit.FILL)
+
+    val adsRemoved: StateFlow<Boolean> = dataStore.data.map { prefs ->
+        prefs[SettingsViewModel.KEY_ADS_REMOVED] ?: false
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private var currentDownloadId: Long? = null
     private var loadJob: Job? = null
@@ -141,6 +166,8 @@ class DetailViewModel @Inject constructor(
             _uiState.value = DetailUiState.Loading
             repository.getPhoto(photoId)
                 .onSuccess { photo ->
+                    repository.recordHistory(photo)
+                    repository.getSimilarPhotos(photo).onSuccess { _similar.value = it }
                     repository.isFavorite(photo.id).collectLatest { fav ->
                         _uiState.value = DetailUiState.Success(photo, fav)
                     }
@@ -153,8 +180,10 @@ class DetailViewModel @Inject constructor(
 
     fun triggerDownload(activity: Activity, photo: Photo) {
         if (_downloadState.value is DownloadState.InProgress) return
-        interstitialAdManager.maybeShow(activity) {
+        if (adsRemoved.value) {
             enqueueDownload(photo)
+        } else {
+            interstitialAdManager.maybeShow(activity) { enqueueDownload(photo) }
         }
     }
 
@@ -164,7 +193,6 @@ class DetailViewModel @Inject constructor(
             DownloadQuality.LARGE -> photo.regularUrl
             DownloadQuality.FULL -> photo.fullUrl
         }
-        // Mark in-progress before enqueue so a fast completion broadcast can't be missed.
         _downloadState.value = DownloadState.InProgress
         val downloadId = try {
             wallpaperDownloader.enqueue(
@@ -181,7 +209,6 @@ class DetailViewModel @Inject constructor(
             return
         }
         currentDownloadId = downloadId
-        // Reconcile race: completion may have arrived before currentDownloadId was set.
         when (val status = wallpaperDownloader.queryStatus(downloadId)) {
             is DownloadStatus.Success -> {
                 persistDownloaded()
@@ -232,7 +259,13 @@ class DetailViewModel @Inject constructor(
         val state = _uiState.value as? DetailUiState.Success ?: return
         viewModelScope.launch {
             _wallpaperState.value = WallpaperState.Applying
-            wallpaperApplier.apply(state.photo.fullUrl, target)
+            val local = offlineCache.pathFor(state.photo.id)
+            wallpaperApplier.apply(
+                imageUrl = state.photo.fullUrl,
+                target = target,
+                fit = wallpaperFit.value,
+                localPath = local
+            )
                 .onSuccess { _wallpaperState.value = WallpaperState.Success }
                 .onFailure { e ->
                     _wallpaperState.value = WallpaperState.Error(e.message ?: "Failed to apply")
@@ -247,6 +280,56 @@ class DetailViewModel @Inject constructor(
             onRewarded = { applyWallpaper(WallpaperTarget.BOTH) },
             onDismissed = {}
         )
+    }
+
+    fun unlockAdsRemoval(activity: Activity, onResult: (Boolean) -> Unit) {
+        rewardedAdManager.show(
+            activity = activity,
+            onRewarded = {
+                viewModelScope.launch {
+                    dataStore.edit { it[SettingsViewModel.KEY_ADS_REMOVED] = true }
+                    onResult(true)
+                }
+            },
+            onDismissed = { onResult(false) }
+        )
+    }
+
+    fun shareImage(activity: Activity) {
+        val state = _uiState.value as? DetailUiState.Success ?: return
+        viewModelScope.launch {
+            val uri = withContext(Dispatchers.IO) {
+                runCatching {
+                    val cacheDir = File(appContext.cacheDir, "share").also { it.mkdirs() }
+                    val file = File(cacheDir, "pazia_${state.photo.id}.jpg")
+                    val request = ImageRequest.Builder(appContext)
+                        .data(state.photo.regularUrl)
+                        .allowHardware(false)
+                        .build()
+                    val result = SingletonImageLoader.get(appContext).execute(request)
+                    if (result !is SuccessResult) return@runCatching null
+                    FileOutputStream(file).use { out ->
+                        result.image.toBitmap().compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, out)
+                    }
+                    FileProvider.getUriForFile(
+                        appContext,
+                        "${appContext.packageName}.fileprovider",
+                        file
+                    )
+                }.getOrNull()
+            }
+            val send = Intent(Intent.ACTION_SEND).apply {
+                if (uri != null) {
+                    type = "image/jpeg"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } else {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, state.photo.htmlLink)
+                }
+            }
+            activity.startActivity(Intent.createChooser(send, null))
+        }
     }
 
     fun resetWallpaperState() {

@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -104,6 +106,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun DetailScreen(
     onBack: () -> Unit,
+    onRelatedPhoto: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DetailViewModel = hiltViewModel()
 ) {
@@ -111,6 +114,7 @@ fun DetailScreen(
     val wallpaperState by viewModel.wallpaperState.collectAsStateWithLifecycle()
     val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
     val rewardedReady by viewModel.rewardedReady.collectAsStateWithLifecycle()
+    val similar by viewModel.similar.collectAsStateWithLifecycle()
     val snackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showWallpaperSheet by remember { mutableStateOf(false) }
@@ -230,6 +234,28 @@ fun DetailScreen(
                     var scale by remember { mutableFloatStateOf(1f) }
                     var offsetX by remember { mutableFloatStateOf(0f) }
                     var offsetY by remember { mutableFloatStateOf(0f) }
+                    var parallaxX by remember { mutableFloatStateOf(0f) }
+                    var parallaxY by remember { mutableFloatStateOf(0f) }
+
+                    DisposableEffect(Unit) {
+                        val sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE)
+                            as android.hardware.SensorManager
+                        val sensor = sensorManager.getDefaultSensor(android.hardware.Sensor.TYPE_GRAVITY)
+                        val listener = object : android.hardware.SensorEventListener {
+                            override fun onSensorChanged(event: android.hardware.SensorEvent?) {
+                                val values = event?.values ?: return
+                                parallaxX = (-values[0] * 8f).coerceIn(-24f, 24f)
+                                parallaxY = (values[1] * 6f).coerceIn(-18f, 18f)
+                            }
+                            override fun onAccuracyChanged(sensor: android.hardware.Sensor?, accuracy: Int) {}
+                        }
+                        if (sensor != null) {
+                            sensorManager.registerListener(
+                                listener, sensor, android.hardware.SensorManager.SENSOR_DELAY_GAME
+                            )
+                        }
+                        onDispose { sensorManager.unregisterListener(listener) }
+                    }
 
                     val placeholderColor = runCatching {
                         Color(photo.color.orEmpty().toColorInt())
@@ -266,8 +292,8 @@ fun DetailScreen(
                             .graphicsLayer(
                                 scaleX = scale,
                                 scaleY = scale,
-                                translationX = offsetX,
-                                translationY = offsetY
+                                translationX = offsetX + if (scale <= 1.05f) parallaxX else 0f,
+                                translationY = offsetY + if (scale <= 1.05f) parallaxY else 0f
                             )
                             .pointerInput(Unit) {
                                 detectTransformGestures { _, pan, zoom, _ ->
@@ -357,7 +383,35 @@ fun DetailScreen(
                             maxLines = 2
                         )
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(12.dp))
+
+                        if (similar.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.similar_photos),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                similar.take(4).forEach { related ->
+                                    AsyncImage(
+                                        model = related.thumbUrl,
+                                        contentDescription = related.description,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(64.dp)
+                                            .clip(MaterialTheme.shapes.small)
+                                            .clickable { onRelatedPhoto(related.id) }
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(12.dp))
+                        }
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -479,11 +533,8 @@ fun DetailScreen(
 
                             FilledIconButton(
                                 onClick = {
-                                    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, photo.htmlLink)
-                                    }
-                                    context.startActivity(Intent.createChooser(sendIntent, null))
+                                    val activity = context as? ComponentActivity ?: return@FilledIconButton
+                                    viewModel.shareImage(activity)
                                 },
                                 modifier = Modifier.size(50.dp),
                                 shape = MaterialTheme.shapes.medium,

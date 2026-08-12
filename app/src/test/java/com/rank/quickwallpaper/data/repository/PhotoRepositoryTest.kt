@@ -1,6 +1,8 @@
 package com.rank.quickwallpaper.data.repository
 
 import com.rank.quickwallpaper.data.local.FavoriteDao
+import com.rank.quickwallpaper.data.local.FavoriteOfflineCache
+import com.rank.quickwallpaper.data.local.HistoryDao
 import com.rank.quickwallpaper.data.local.entities.FavoriteEntity
 import com.rank.quickwallpaper.data.remote.PexelsApi
 import com.rank.quickwallpaper.domain.model.Photo
@@ -25,6 +27,10 @@ class PhotoRepositoryTest {
     private val dao = mockk<FavoriteDao>(relaxed = true) {
         every { observeAll() } returns emptyFlow()
     }
+    private val historyDao = mockk<HistoryDao>(relaxed = true)
+    private val offlineCache = mockk<FavoriteOfflineCache>(relaxed = true)
+
+    private fun repo() = PhotoRepository(api, dao, historyDao, offlineCache)
 
     private val samplePhoto = Photo(
         id = "99",
@@ -46,8 +52,8 @@ class PhotoRepositoryTest {
 
     @Test
     fun `repository creates editorial feed without crash`() {
-        val repo = PhotoRepository(api, dao)
-        assertNotNull(repo.getEditorialFeed())
+        val repository = repo()
+        assertNotNull(repository.getEditorialFeed())
     }
 
     @Test
@@ -55,7 +61,7 @@ class PhotoRepositoryTest {
         val entitySlot = slot<FavoriteEntity>()
         coEvery { dao.insert(capture(entitySlot)) } returns Unit
 
-        PhotoRepository(api, dao).addFavorite(samplePhoto)
+        repo().addFavorite(samplePhoto)
 
         coVerify(exactly = 1) { dao.insert(any()) }
         val entity = entitySlot.captured
@@ -69,13 +75,13 @@ class PhotoRepositoryTest {
     @Test
     fun `isFavorite delegates to dao flow`() = runTest {
         every { dao.isFavorite("99") } returns flowOf(true)
-        val fav = PhotoRepository(api, dao).isFavorite("99").first()
+        val fav = repo().isFavorite("99").first()
         assertTrue(fav)
     }
 
     @Test
     fun `removeFavorite deletes by id`() = runTest {
-        PhotoRepository(api, dao).removeFavorite("99")
+        repo().removeFavorite("99")
         coVerify { dao.deleteById("99") }
     }
 }

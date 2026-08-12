@@ -27,6 +27,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -36,6 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +54,8 @@ import com.rank.quickwallpaper.domain.model.Category
 import com.rank.quickwallpaper.ui.components.ErrorState
 import com.rank.quickwallpaper.ui.components.PhotoGridItem
 import com.rank.quickwallpaper.ui.components.ShimmerGrid
+
+private val EXPANDED_COLUMNS_WIDTH_DP = 840.dp
 
 private val categoryColors = mapOf(
     "nature"       to Color(0xFF059669),
@@ -85,11 +90,21 @@ fun CategoriesScreen(
 ) {
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val photos = viewModel.photos.collectAsLazyPagingItems()
+    val columnCount = with(LocalDensity.current) {
+        if (LocalWindowInfo.current.containerSize.width.toDp() >= EXPANDED_COLUMNS_WIDTH_DP) 3 else 2
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.nav_categories)) },
+                actions = {
+                    if (onCollectionsClick != null) {
+                        TextButton(onClick = onCollectionsClick) {
+                            Text(stringResource(R.string.collections_browse))
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -98,7 +113,7 @@ fun CategoriesScreen(
         modifier = modifier
     ) { padding ->
         LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
+            columns = StaggeredGridCells.Fixed(columnCount),
             contentPadding = PaddingValues(
                 start = 12.dp, end = 12.dp,
                 top = padding.calculateTopPadding(),
