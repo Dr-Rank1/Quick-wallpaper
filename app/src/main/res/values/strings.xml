@@ -50,6 +50,7 @@
 
     <!-- Error / state -->
     <string name="error_load">Couldn\'t load photos. Check your connection.</string>
+    <string name="error_shuffle">Couldn\'t load a random wallpaper. Try again.</string>
     <string name="retry">Retry</string>
 
     <!-- Onboarding -->
@@ -65,6 +66,10 @@
 
     <!-- Settings -->
     <string name="settings_appearance">Appearance</string>
+    <string name="settings_skins">Skins</string>
+    <string name="settings_skins_desc">Restyle chrome type, color, and shape</string>
+    <string name="settings_dark_theme">Dark theme</string>
+    <string name="settings_dark_theme_desc">Use a dark appearance throughout the app</string>
     <string name="settings_dynamic_colors">Material You Colors</string>
     <string name="settings_dynamic_colors_desc">Apply wallpaper-derived colors (Android 12+)</string>
     <string name="settings_about">About</string>

@@ -49,7 +49,10 @@ class RewardedAdManager @Inject constructor(
             }
             override fun adDisplayed(ad: Ad) {}
             override fun adClicked(ad: Ad) {}
-            override fun adNotDisplayed(ad: Ad) { onDismissed() }
+            override fun adNotDisplayed(ad: Ad) {
+                load()
+                onDismissed()
+            }
         })
     }
 

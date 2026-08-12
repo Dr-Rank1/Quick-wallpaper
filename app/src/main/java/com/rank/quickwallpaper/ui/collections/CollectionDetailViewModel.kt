@@ -18,9 +18,8 @@ class CollectionDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     val collectionId: String = checkNotNull(savedStateHandle["collectionId"])
-    val collectionTitle: String = java.net.URLDecoder.decode(
-        savedStateHandle["collectionTitle"] ?: "", "UTF-8"
-    )
+    // Navigation already URL-decodes path args; decoding again breaks titles that contain '%'.
+    val collectionTitle: String = savedStateHandle["collectionTitle"] ?: ""
 
     val photos: Flow<PagingData<Photo>> = repository
         .getCollectionPhotos(collectionId)

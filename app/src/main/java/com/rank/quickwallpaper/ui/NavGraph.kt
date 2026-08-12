@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
@@ -56,9 +55,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.rank.quickwallpaper.ui.theme.PaziaAccent
-import com.rank.quickwallpaper.ui.theme.PaziaBorderLight
-import com.rank.quickwallpaper.ui.theme.PaziaGlassNav
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -269,9 +265,9 @@ private fun PaziaBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(PaziaGlassNav)
-            .border(width = 0.5.dp, color = PaziaBorderLight, shape = RoundedCornerShape(24.dp))
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
+            .border(width = 0.5.dp, color = MaterialTheme.colorScheme.outline, shape = MaterialTheme.shapes.extraLarge)
             .padding(horizontal = 4.dp, vertical = 4.dp)
     ) {
         Row(
@@ -282,14 +278,14 @@ private fun PaziaBottomBar(
             items.forEach { screen ->
                 val selected = currentDestination == screen.route
                 val iconTint by animateColorAsState(
-                    targetValue = if (selected) PaziaAccent
+                    targetValue = if (selected) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     label = "nav_tint"
                 )
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(MaterialTheme.shapes.medium)
                         .clickable { onItemClick(screen) }
                         .padding(vertical = 6.dp),
                     contentAlignment = Alignment.Center
@@ -324,7 +320,7 @@ private fun PaziaNavigationRail(
     onItemClick: (Screen) -> Unit
 ) {
     NavigationRail(
-        containerColor = PaziaGlassNav,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         header = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -333,14 +329,14 @@ private fun PaziaNavigationRail(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(PaziaAccent.copy(alpha = 0.15f)),
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Home,
                         contentDescription = null,
-                        tint = PaziaAccent,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -349,7 +345,7 @@ private fun PaziaNavigationRail(
                     text = "Pazia",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = PaziaAccent
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -357,7 +353,7 @@ private fun PaziaNavigationRail(
         items.forEach { screen ->
             val selected = currentDestination == screen.route
             val iconTint by animateColorAsState(
-                targetValue = if (selected) PaziaAccent
+                targetValue = if (selected) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurfaceVariant,
                 label = "rail_icon_tint"
             )
@@ -379,7 +375,7 @@ private fun PaziaNavigationRail(
                                     .offset(x = 14.dp)
                                     .size(4.dp)
                                     .clip(CircleShape)
-                                    .background(PaziaAccent)
+                                    .background(MaterialTheme.colorScheme.primary)
                             )
                         }
                     }
@@ -393,9 +389,9 @@ private fun PaziaNavigationRail(
                     )
                 },
                 colors = NavigationRailItemDefaults.colors(
-                    selectedIconColor = PaziaAccent,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = if (selected) PaziaAccent.copy(alpha = 0.12f) else Color.Transparent
+                    indicatorColor = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent
                 )
             )
         }

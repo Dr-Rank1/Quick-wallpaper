@@ -19,7 +19,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): PaziaDatabase =
         Room.databaseBuilder(context, PaziaDatabase::class.java, "pazia.db")
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            // Prefer explicit Migrations when bumping PaziaDatabase.version so favorites are kept.
             .build()
 
     @Provides

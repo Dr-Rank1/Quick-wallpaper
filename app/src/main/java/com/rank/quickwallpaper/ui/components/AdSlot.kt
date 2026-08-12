@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rank.quickwallpaper.R
 import com.startapp.sdk.ads.nativead.NativeAdDetails
@@ -27,19 +25,19 @@ import java.util.Locale
 fun NativeAdSlot(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val adVm: NativeAdViewModel = viewModel()
-    var nativeAd by remember { mutableStateOf<NativeAdDetails?>(null) }
+    val ad by adVm.nativeAd.collectAsStateWithLifecycle()
 
     DisposableEffect(Unit) {
         adVm.loadAd(context)
         onDispose { adVm.releaseAd() }
     }
 
-    val ad = adVm.nativeAd
     if (ad == null) return
 
     AndroidView(
         modifier = modifier.fillMaxWidth().wrapContentHeight(),
-        factory = { ctx -> inflateAndBind(ctx, ad) }
+        factory = { ctx -> inflateAndBind(ctx, ad!!) },
+        update = { view -> bindNativeAd(view, ad!!) }
     )
 }
 

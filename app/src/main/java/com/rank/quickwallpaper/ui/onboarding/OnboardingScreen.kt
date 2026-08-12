@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.PhotoLibrary
@@ -130,14 +129,14 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     Box(
                         modifier = Modifier
                             .size(136.dp)
-                            .clip(RoundedCornerShape(36.dp))
+                            .clip(MaterialTheme.shapes.extraLarge)
                             .background(page.iconTint.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(100.dp)
-                                .clip(RoundedCornerShape(28.dp))
+                                .clip(MaterialTheme.shapes.large)
                                 .background(page.iconTint.copy(alpha = 0.18f)),
                             contentAlignment = Alignment.Center
                         ) {

@@ -102,17 +102,12 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.work.compiler)
 
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.room.paging)
-
-    // WorkManager
-    implementation(libs.work.runtime.ktx)
 
     // Retrofit + Moshi
     implementation(libs.retrofit.core)

@@ -48,18 +48,21 @@ class InterstitialAdManager @Inject constructor(
             return
         }
 
-        sessionShown = true
         val current = interstitialAd ?: run { onDone(); return }
+        interstitialAd = null
         current.showAd(object : AdDisplayListener {
             override fun adHidden(ad: Ad) {
-                interstitialAd = null
+                sessionShown = true
                 lastShownTime = System.currentTimeMillis()
                 load()
                 onDone()
             }
             override fun adDisplayed(ad: Ad) {}
             override fun adClicked(ad: Ad) {}
-            override fun adNotDisplayed(ad: Ad) { onDone() }
+            override fun adNotDisplayed(ad: Ad) {
+                load()
+                onDone()
+            }
         })
     }
 }

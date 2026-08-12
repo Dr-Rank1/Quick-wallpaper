@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bolt
@@ -98,10 +97,6 @@ import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.service.WallpaperTarget
 import com.rank.quickwallpaper.ui.components.ErrorState
 import com.rank.quickwallpaper.ui.components.PhotoGridItem
-import com.rank.quickwallpaper.ui.theme.PaziaAccent
-import com.rank.quickwallpaper.ui.theme.PaziaAccentLight
-import com.rank.quickwallpaper.ui.theme.PaziaOverlayHeavy
-import com.rank.quickwallpaper.ui.theme.PaziaOverlayLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -326,11 +321,14 @@ fun DetailScreen(
                     ) {
                         TextButton(
                             onClick = {
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    photo.photographer.profileUrl.toUri()
-                                )
-                                context.startActivity(intent)
+                                runCatching {
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            photo.photographer.profileUrl.toUri()
+                                        )
+                                    )
+                                }
                             },
                             contentPadding = PaddingValues(0.dp)
                         ) {
@@ -370,9 +368,9 @@ fun DetailScreen(
                                 onClick = { showWallpaperSheet = true },
                                 modifier = Modifier.weight(1f).height(50.dp),
                                 enabled = wallpaperState !is WallpaperState.Applying,
-                                shape = RoundedCornerShape(14.dp),
+                                shape = MaterialTheme.shapes.medium,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = PaziaAccent
+                                    containerColor = MaterialTheme.colorScheme.primary
                                 )
                             ) {
                                 if (wallpaperState is WallpaperState.Applying) {
@@ -424,9 +422,9 @@ fun DetailScreen(
                                 },
                                 enabled = downloadState !is DownloadState.InProgress,
                                 modifier = Modifier.size(50.dp),
-                                shape = RoundedCornerShape(14.dp),
+                                shape = MaterialTheme.shapes.medium,
                                 colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = if (isDownloaded) PaziaAccentLight.copy(alpha = 0.2f)
+                                    containerColor = if (isDownloaded) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
                                     else Color.White.copy(alpha = 0.15f)
                                 )
                             ) {
@@ -464,9 +462,9 @@ fun DetailScreen(
                             FilledIconButton(
                                 onClick = viewModel::toggleFavorite,
                                 modifier = Modifier.size(50.dp),
-                                shape = RoundedCornerShape(14.dp),
+                                shape = MaterialTheme.shapes.medium,
                                 colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = if (state.isFavorite) PaziaAccent.copy(alpha = 0.25f)
+                                    containerColor = if (state.isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
                                     else Color.White.copy(alpha = 0.15f)
                                 )
                             ) {
@@ -474,7 +472,7 @@ fun DetailScreen(
                                     imageVector = if (state.isFavorite) Icons.Outlined.Favorite
                                     else Icons.Outlined.FavoriteBorder,
                                     contentDescription = stringResource(R.string.favorite),
-                                    tint = if (state.isFavorite) PaziaAccentLight else Color.White,
+                                    tint = if (state.isFavorite) MaterialTheme.colorScheme.primary else Color.White,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -488,7 +486,7 @@ fun DetailScreen(
                                     context.startActivity(Intent.createChooser(sendIntent, null))
                                 },
                                 modifier = Modifier.size(50.dp),
-                                shape = RoundedCornerShape(14.dp),
+                                shape = MaterialTheme.shapes.medium,
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = Color.White.copy(alpha = 0.15f)
                                 )
@@ -511,10 +509,10 @@ fun DetailScreen(
                             },
                             enabled = rewardedReady,
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(14.dp),
+                            shape = MaterialTheme.shapes.medium,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = PaziaAccent.copy(alpha = 0.18f),
-                                contentColor = PaziaAccentLight
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                                contentColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
                             Icon(
@@ -575,7 +573,7 @@ private fun WallpaperTargetSheet(
             Button(
                 onClick = { onSelect(target) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(14.dp),
+                shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onSurface
