@@ -11,6 +11,7 @@ hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 room = "2.8.4"
 workManager = "2.11.2"
+glance = "1.1.1"
 retrofit = "3.0.0"
 okhttp = "5.4.0"
 moshi = "1.15.2"
@@ -60,6 +61,10 @@ room-paging = { group = "androidx.room", name = "room-paging", version.ref = "ro
 
 # WorkManager
 work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
+
+# Glance
+glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 
 # Retrofit + Moshi
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }

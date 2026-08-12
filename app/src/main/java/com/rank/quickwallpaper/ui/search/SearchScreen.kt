@@ -128,20 +128,26 @@ fun SearchScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(horizontal = 20.dp)
                 ) {
-                    val tags = listOf(
-                        "Nature", "Abstract", "City", "Dark", "Minimal",
-                        "Space", "Ocean", "Forest", "Architecture", "Art"
+                    val vibes = listOf(
+                        R.string.vibe_dark to "Dark",
+                        R.string.vibe_blue to "Blue",
+                        R.string.vibe_pastel to "Pastel",
+                        R.string.vibe_neon to "Neon",
+                        R.string.vibe_gold to "Gold",
+                        R.string.vibe_bw to "Black & White",
+                        R.string.vibe_sunset to "Sunset",
+                        R.string.vibe_ocean to "Ocean"
                     )
-                    tags.forEach { tag ->
+                    vibes.forEach { (labelRes, queryText) ->
                         Box(
                             modifier = Modifier
                                 .clip(MaterialTheme.shapes.small)
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { viewModel.onQueryChange(tag) }
+                                .clickable { viewModel.onQueryChange(queryText) }
                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
                             Text(
-                                text = tag,
+                                text = stringResource(labelRes),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

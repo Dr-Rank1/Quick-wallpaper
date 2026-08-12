@@ -23,16 +23,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Grade
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -68,8 +72,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
 import com.rank.quickwallpaper.BuildConfig
 import com.rank.quickwallpaper.R
-import com.rank.quickwallpaper.ui.theme.AppSkinId
-import com.rank.quickwallpaper.ui.theme.SkinSelectorRow
+import com.rank.quickwallpaper.service.WallpaperFit
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, coil3.annotation.ExperimentalCoilApi::class)
@@ -83,6 +86,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val cacheClearedMsg = stringResource(R.string.settings_cache_cleared)
+    val historyClearedMsg = stringResource(R.string.history_cleared)
     val shareTextMsg = stringResource(R.string.settings_share_text)
     val resetDoneMsg = stringResource(R.string.settings_reset_done)
 
@@ -113,32 +117,6 @@ fun SettingsScreen(
             SectionLabel(stringResource(R.string.settings_appearance))
             Spacer(Modifier.height(8.dp))
             SettingsCard {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                    ) {
-                        SettingIcon(icon = Icons.Outlined.Palette)
-                        Spacer(Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.settings_skins),
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = stringResource(R.string.settings_skins_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    SkinSelectorRow(
-                        selected = settings.selectedSkin,
-                        onSelect = viewModel::setAppSkin
-                    )
-                }
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 ToggleRow(
                     icon = Icons.Outlined.DarkMode,
                     title = stringResource(R.string.settings_dark_theme),
@@ -154,6 +132,140 @@ fun SettingsScreen(
                     checked = settings.useDynamicColors,
                     onCheckedChange = viewModel::setDynamicColors
                 )
+            }
+
+            Spacer(Modifier.height(20.dp))
+            SectionLabel(stringResource(R.string.wallpaper_fit))
+            Spacer(Modifier.height(8.dp))
+            SettingsCard {
+                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SettingIcon(icon = Icons.Outlined.Wallpaper)
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.wallpaper_fit),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.wallpaper_fit_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        WallpaperFit.entries.forEach { fit ->
+                            val selected = settings.wallpaperFit == fit
+                            FilterChip(
+                                selected = selected,
+                                onClick = { viewModel.setWallpaperFit(fit) },
+                                label = {
+                                    Text(
+                                        when (fit) {
+                                            WallpaperFit.FILL -> stringResource(R.string.fit_fill)
+                                            WallpaperFit.FIT -> stringResource(R.string.fit_fit)
+                                            WallpaperFit.STRETCH -> stringResource(R.string.fit_stretch)
+                                        }
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                    selectedLabelColor = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            SectionLabel(stringResource(R.string.auto_change))
+            Spacer(Modifier.height(8.dp))
+            SettingsCard {
+                ToggleRow(
+                    icon = Icons.Outlined.Schedule,
+                    title = stringResource(R.string.auto_change),
+                    subtitle = stringResource(R.string.auto_change_desc),
+                    checked = settings.autoChangeEnabled,
+                    onCheckedChange = viewModel::setAutoChange
+                )
+                if (settings.autoChangeEnabled) {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
+                        Text(
+                            text = stringResource(R.string.auto_change_hours),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            listOf(6, 12, 24).forEach { hours ->
+                                val selected = settings.autoChangeHours == hours
+                                FilterChip(
+                                    selected = selected,
+                                    onClick = { viewModel.setAutoChangeHours(hours) },
+                                    label = { Text("${hours}h") },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                ClickableRow(
+                    icon = Icons.Outlined.History,
+                    title = stringResource(R.string.clear_history),
+                    subtitle = stringResource(R.string.clear_history_desc),
+                    onClick = {
+                        scope.launch {
+                            viewModel.clearHistory()
+                            snackbarHostState.showSnackbar(historyClearedMsg)
+                        }
+                    }
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+            SectionLabel(stringResource(R.string.ads_removed))
+            Spacer(Modifier.height(8.dp))
+            SettingsCard {
+                if (settings.adsRemoved) {
+                    InfoRow(
+                        icon = Icons.Outlined.Block,
+                        title = stringResource(R.string.ads_removed),
+                        subtitle = stringResource(R.string.ads_removed_active)
+                    )
+                } else {
+                    ClickableRow(
+                        icon = Icons.Outlined.Block,
+                        title = stringResource(R.string.unlock_ads),
+                        subtitle = stringResource(R.string.unlock_ads_desc),
+                        onClick = {
+                            val activity = context as? android.app.Activity ?: return@ClickableRow
+                            viewModel.unlockAdsByRewarded(activity) { unlocked ->
+                                if (unlocked) {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            context.getString(R.string.ads_removed_active)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
             }
 
             Spacer(Modifier.height(20.dp))
@@ -307,7 +419,6 @@ fun SettingsScreen(
                     scope.launch {
                         viewModel.setDarkTheme(true)
                         viewModel.setDynamicColors(true)
-                        viewModel.setAppSkin(AppSkinId.MIDNIGHT)
                         viewModel.setDownloadQuality(DownloadQuality.FULL)
                         snackbarHostState.showSnackbar(resetDoneMsg)
                     }

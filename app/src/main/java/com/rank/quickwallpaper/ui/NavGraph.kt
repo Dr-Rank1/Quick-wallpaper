@@ -133,7 +133,10 @@ private fun AnimatedContentTransitionScope<*>.exitToRight(): ExitTransition =
     slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, slideSpec) + fadeOut(fadeSpec)
 
 @Composable
-fun PaziaNavGraph(startDestination: String = Screen.Home.route) {
+fun PaziaNavGraph(
+    startDestination: String = Screen.Home.route,
+    adsRemoved: Boolean = false
+) {
     val navController = rememberNavController()
     val navBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStack?.destination
@@ -167,6 +170,7 @@ fun PaziaNavGraph(startDestination: String = Screen.Home.route) {
             PaziaNavHost(
                 navController = navController,
                 startDestination = startDestination,
+                adsRemoved = adsRemoved,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -175,6 +179,7 @@ fun PaziaNavGraph(startDestination: String = Screen.Home.route) {
             PaziaNavHost(
                 navController = navController,
                 startDestination = startDestination,
+                adsRemoved = adsRemoved,
                 modifier = Modifier.fillMaxSize()
             )
             if (showBottomBar) {
@@ -193,6 +198,7 @@ fun PaziaNavGraph(startDestination: String = Screen.Home.route) {
 private fun PaziaNavHost(
     navController: NavHostController,
     startDestination: String,
+    adsRemoved: Boolean,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -208,7 +214,8 @@ private fun PaziaNavHost(
             HomeScreen(
                 onPhotoClick = { navController.navigate(Screen.Detail.createRoute(it)) },
                 onSearchClick = { navController.navigate(Screen.Search.route) },
-                onRandomPhoto = { navController.navigate(Screen.Detail.createRoute(it)) }
+                onRandomPhoto = { navController.navigate(Screen.Detail.createRoute(it)) },
+                adsRemoved = adsRemoved
             )
         }
         composable(Screen.Search.route) {
@@ -229,7 +236,10 @@ private fun PaziaNavHost(
             arguments = listOf(navArgument("photoId") { type = NavType.StringType })
         ) {
             BackHandler { navController.popBackStack() }
-            DetailScreen(onBack = { navController.popBackStack() })
+            DetailScreen(
+                onBack = { navController.popBackStack() },
+                onRelatedPhoto = { navController.navigate(Screen.Detail.createRoute(it)) }
+            )
         }
         composable(Screen.Collections.route) {
             CollectionsScreen(

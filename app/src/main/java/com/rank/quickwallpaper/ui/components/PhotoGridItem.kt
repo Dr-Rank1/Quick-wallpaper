@@ -16,6 +16,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +34,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +43,7 @@ import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
+import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Photo
 
 private val cardShape = RoundedCornerShape(12.dp)
@@ -45,7 +52,9 @@ private val cardShape = RoundedCornerShape(12.dp)
 fun PhotoGridItem(
     photo: Photo,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFavorite: Boolean = false,
+    onFavoriteClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val placeholderColor = remember(photo.color) {
@@ -91,6 +100,23 @@ fun PhotoGridItem(
             },
             modifier = Modifier.fillMaxWidth().then(aspectRatioMod)
         )
+
+        if (onFavoriteClick != null) {
+            IconButton(
+                onClick = onFavoriteClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+                    .size(36.dp)
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = stringResource(R.string.favorite),
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
 
         Box(
             modifier = Modifier

@@ -1,6 +1,8 @@
 package com.rank.quickwallpaper
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
@@ -17,9 +19,15 @@ import okio.Path.Companion.toOkioPath
 import javax.inject.Inject
 
 @HiltAndroidApp
-class PaziaApplication : Application() {
+class PaziaApplication : Application(), Configuration.Provider {
 
+    @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var okHttpClient: OkHttpClient
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     override fun onCreate() {
         super.onCreate()
