@@ -51,6 +51,7 @@
 
     <!-- Error / state -->
     <string name="error_load">Haikuweza kupakia picha. Angalia muunganisho wako.</string>
+    <string name="error_shuffle">Haikuweza kupakia picha ya nasibu. Jaribu tena.</string>
     <string name="retry">Jaribu tena</string>
 
     <!-- Onboarding -->
@@ -66,6 +67,10 @@
 
     <!-- Settings -->
     <string name="settings_appearance">Muonekano</string>
+    <string name="settings_skins">Ngozi</string>
+    <string name="settings_skins_desc">Badilisha rangi, fonti, na maumbo ya programu</string>
+    <string name="settings_dark_theme">Mandhari meusi</string>
+    <string name="settings_dark_theme_desc">Tumia muonekano wa giza katika programu</string>
     <string name="settings_dynamic_colors">Rangi za Material You</string>
     <string name="settings_dynamic_colors_desc">Tumia rangi zinazotokana na mwandiko (Android 12+)</string>
     <string name="settings_about">Kuhusu</string>
@@ -96,7 +101,7 @@
     <string name="settings_version">Toleo</string>
 
     <!-- Settings - Reset -->
-    <string name="settings_reset">Weka kwenya msingi</string>
+    <string name="settings_reset">Weka kwenye msingi</string>
     <string name="settings_reset_done">Mpangilio umerejeshwa kwenye msingi</string>
     <string name="settings_powered_by">Inaendeshwa na Pexels</string>
 </resources>

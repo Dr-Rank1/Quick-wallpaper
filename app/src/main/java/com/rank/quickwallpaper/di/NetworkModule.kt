@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -32,9 +33,15 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .cache(cache)
             .addInterceptor { chain ->
+                val apiKey = BuildConfig.PEXELS_API_KEY
+                if (apiKey.isBlank() || apiKey == "YOUR_KEY_HERE") {
+                    throw IOException(
+                        "Missing PEXELS_API_KEY in local.properties. Add PEXELS_API_KEY=<your key> and rebuild."
+                    )
+                }
                 chain.proceed(
                     chain.request().newBuilder()
-                        .addHeader("Authorization", BuildConfig.PEXELS_API_KEY)
+                        .addHeader("Authorization", apiKey)
                         .build()
                 )
             }

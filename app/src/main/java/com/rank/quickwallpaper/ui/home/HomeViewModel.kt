@@ -8,8 +8,11 @@ import com.rank.quickwallpaper.data.repository.PhotoRepository
 import com.rank.quickwallpaper.domain.model.Photo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,11 +28,16 @@ class HomeViewModel @Inject constructor(
     private val _randomPhotoId = MutableStateFlow<String?>(null)
     val randomPhotoId: StateFlow<String?> = _randomPhotoId
 
+    private val _shuffleError = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val shuffleError: SharedFlow<String> = _shuffleError.asSharedFlow()
+
     fun shuffle() {
         viewModelScope.launch {
-            repository.getRandomPhoto().onSuccess { photo ->
-                _randomPhotoId.value = photo.id
-            }
+            repository.getRandomPhoto()
+                .onSuccess { photo -> _randomPhotoId.value = photo.id }
+                .onFailure { e ->
+                    _shuffleError.tryEmit(e.message ?: "Couldn't load a random wallpaper")
+                }
         }
     }
 

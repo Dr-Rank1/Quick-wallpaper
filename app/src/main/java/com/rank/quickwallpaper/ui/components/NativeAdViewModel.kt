@@ -7,16 +7,19 @@ import com.startapp.sdk.ads.nativead.NativeAdPreferences
 import com.startapp.sdk.ads.nativead.StartAppNativeAd
 import com.startapp.sdk.adsbase.Ad
 import com.startapp.sdk.adsbase.adlisteners.AdEventListener
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class NativeAdViewModel : ViewModel() {
 
-    private var _nativeAd: NativeAdDetails? = null
-    val nativeAd: NativeAdDetails? get() = _nativeAd
+    private val _nativeAd = MutableStateFlow<NativeAdDetails?>(null)
+    val nativeAd: StateFlow<NativeAdDetails?> = _nativeAd.asStateFlow()
 
     private var startAppNativeAd: StartAppNativeAd? = null
 
     fun loadAd(context: Context) {
-        if (_nativeAd != null || startAppNativeAd != null) return
+        if (_nativeAd.value != null || startAppNativeAd != null) return
 
         val preferences = NativeAdPreferences().apply {
             setAutoBitmapDownload(true)
@@ -27,18 +30,18 @@ class NativeAdViewModel : ViewModel() {
         startAppNativeAd = nativeAd
         nativeAd.loadAd(object : AdEventListener {
             override fun onReceiveAd(ad: Ad) {
-                _nativeAd = nativeAd.nativeAds?.firstOrNull()
+                _nativeAd.value = nativeAd.nativeAds?.firstOrNull()
             }
             override fun onFailedToReceiveAd(ad: Ad?) {
-                _nativeAd = null
+                _nativeAd.value = null
                 startAppNativeAd = null
             }
         })
     }
 
     fun releaseAd() {
-        _nativeAd?.unregisterView()
-        _nativeAd = null
+        _nativeAd.value?.unregisterView()
+        _nativeAd.value = null
         startAppNativeAd = null
     }
 

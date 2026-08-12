@@ -164,6 +164,8 @@ class DetailViewModel @Inject constructor(
             DownloadQuality.LARGE -> photo.regularUrl
             DownloadQuality.FULL -> photo.fullUrl
         }
+        // Mark in-progress before enqueue so a fast completion broadcast can't be missed.
+        _downloadState.value = DownloadState.InProgress
         val downloadId = try {
             wallpaperDownloader.enqueue(
                 photoUrl = url,
@@ -179,7 +181,15 @@ class DetailViewModel @Inject constructor(
             return
         }
         currentDownloadId = downloadId
-        _downloadState.value = DownloadState.InProgress
+        // Reconcile race: completion may have arrived before currentDownloadId was set.
+        when (val status = wallpaperDownloader.queryStatus(downloadId)) {
+            is DownloadStatus.Success -> {
+                persistDownloaded()
+                _downloadState.value = DownloadState.Success(status.uri)
+            }
+            is DownloadStatus.Failed -> _downloadState.value = DownloadState.Failed
+            else -> {}
+        }
     }
 
     fun retryDownload(activity: Activity, photo: Photo) {

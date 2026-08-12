@@ -20,11 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Grade
 import androidx.compose.material.icons.outlined.Info
@@ -68,10 +68,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
 import com.rank.quickwallpaper.BuildConfig
 import com.rank.quickwallpaper.R
-import com.rank.quickwallpaper.ui.theme.PaziaAccent
-import com.rank.quickwallpaper.ui.theme.PaziaAccentLight
-import com.rank.quickwallpaper.ui.theme.PaziaBorderLight
-import com.rank.quickwallpaper.ui.theme.PaziaOverlayLight
+import com.rank.quickwallpaper.ui.theme.AppSkinId
+import com.rank.quickwallpaper.ui.theme.SkinSelectorRow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, coil3.annotation.ExperimentalCoilApi::class)
@@ -115,6 +113,40 @@ fun SettingsScreen(
             SectionLabel(stringResource(R.string.settings_appearance))
             Spacer(Modifier.height(8.dp))
             SettingsCard {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                    ) {
+                        SettingIcon(icon = Icons.Outlined.Palette)
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.settings_skins),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.settings_skins_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    SkinSelectorRow(
+                        selected = settings.selectedSkin,
+                        onSelect = viewModel::setAppSkin
+                    )
+                }
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                ToggleRow(
+                    icon = Icons.Outlined.DarkMode,
+                    title = stringResource(R.string.settings_dark_theme),
+                    subtitle = stringResource(R.string.settings_dark_theme_desc),
+                    checked = settings.useDarkTheme,
+                    onCheckedChange = viewModel::setDarkTheme
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 ToggleRow(
                     icon = Icons.Outlined.Palette,
                     title = stringResource(R.string.settings_dynamic_colors),
@@ -165,8 +197,8 @@ fun SettingsScreen(
                                     )
                                 },
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = PaziaAccent.copy(alpha = 0.15f),
-                                    selectedLabelColor = PaziaAccent
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                    selectedLabelColor = MaterialTheme.colorScheme.primary
                                 )
                             )
                         }
@@ -258,8 +290,8 @@ fun SettingsScreen(
                     title = stringResource(R.string.pexels_license),
                     subtitle = null,
                     trailingIcon = Icons.AutoMirrored.Outlined.OpenInNew,
-                    iconTint = PaziaAccent,
-                    titleColor = PaziaAccent,
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    titleColor = MaterialTheme.colorScheme.primary,
                     onClick = {
                         context.startActivity(
                             Intent(Intent.ACTION_VIEW, "https://www.pexels.com/license/".toUri())
@@ -275,6 +307,7 @@ fun SettingsScreen(
                     scope.launch {
                         viewModel.setDarkTheme(true)
                         viewModel.setDynamicColors(true)
+                        viewModel.setAppSkin(AppSkinId.MIDNIGHT)
                         viewModel.setDownloadQuality(DownloadQuality.FULL)
                         snackbarHostState.showSnackbar(resetDoneMsg)
                     }
@@ -318,7 +351,7 @@ fun SettingsScreen(
                 Text(
                     text = stringResource(R.string.settings_powered_by),
                     style = MaterialTheme.typography.labelSmall,
-                    color = PaziaAccent,
+                    color = MaterialTheme.colorScheme.primary,
                     textDecoration = TextDecoration.Underline
                 )
             }
@@ -331,19 +364,20 @@ fun SettingsScreen(
 @Composable
 private fun SettingIcon(
     icon: ImageVector,
-    tint: Color = PaziaAccent
+    tint: Color? = null
 ) {
+    val resolvedTint = tint ?: MaterialTheme.colorScheme.primary
     Box(
         modifier = Modifier
             .size(36.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(PaziaOverlayLight),
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = tint,
+            tint = resolvedTint,
             modifier = Modifier.size(20.dp)
         )
     }
@@ -357,9 +391,9 @@ private fun SettingsCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surface)
-            .border(0.5.dp, PaziaBorderLight, RoundedCornerShape(20.dp))
+            .border(0.5.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
     ) {
         content()
     }
@@ -375,14 +409,14 @@ private fun SectionLabel(title: String) {
             modifier = Modifier
                 .width(3.dp)
                 .height(16.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(PaziaAccent)
+                .clip(MaterialTheme.shapes.extraSmall)
+                .background(MaterialTheme.colorScheme.primary)
         )
         Spacer(Modifier.width(10.dp))
         Text(
             text = title.uppercase(),
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            color = PaziaAccent
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
@@ -418,8 +452,8 @@ private fun ToggleRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = PaziaAccent,
-                checkedTrackColor = PaziaAccent.copy(alpha = 0.3f),
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                 checkedBorderColor = Color.Transparent
             )
         )
@@ -443,7 +477,7 @@ private fun ClickableRow(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SettingIcon(icon = icon, tint = iconTint ?: PaziaAccent)
+        SettingIcon(icon = icon, tint = iconTint ?: MaterialTheme.colorScheme.primary)
         Column(
             modifier = Modifier
                 .weight(1f)

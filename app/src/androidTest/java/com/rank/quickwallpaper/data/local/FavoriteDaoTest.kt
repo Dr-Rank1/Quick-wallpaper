@@ -32,22 +32,27 @@ class FavoriteDaoTest {
         db.close()
     }
 
+    private fun entity(
+        id: String,
+        photographerName: String = "Test",
+        color: String? = "#FF0000"
+    ) = FavoriteEntity(
+        id = id,
+        thumbUrl = "https://example.com/thumb.jpg",
+        regularUrl = "https://example.com/reg.jpg",
+        fullUrl = "https://example.com/full.jpg",
+        photographerName = photographerName,
+        photographerUsername = "testuser",
+        photographerProfileUrl = "https://example.com/profile",
+        width = 1920,
+        height = 1080,
+        color = color,
+        downloadLocation = "https://example.com/download"
+    )
+
     @Test
     fun insertAndObserve() = runBlocking {
-        val entity = FavoriteEntity(
-            id = "test1",
-            smallUrl = "https://example.com/small.jpg",
-            regularUrl = "https://example.com/reg.jpg",
-            fullUrl = "https://example.com/full.jpg",
-            htmlLink = "https://example.com",
-            photographerName = "Test",
-            photographerProfileUrl = "https://example.com/profile",
-            color = "#FF0000",
-            width = 1920,
-            height = 1080,
-            description = "A test photo"
-        )
-        dao.insert(entity)
+        dao.insert(entity("test1"))
         val all = dao.observeAll().first()
         assertEquals(1, all.size)
         assertEquals("test1", all[0].id)
@@ -55,13 +60,7 @@ class FavoriteDaoTest {
 
     @Test
     fun deleteById() = runBlocking {
-        val entity = FavoriteEntity(
-            id = "delete_me", smallUrl = "", regularUrl = "",
-            fullUrl = "", htmlLink = "", photographerName = "",
-            photographerProfileUrl = "", color = null,
-            width = 0, height = 0, description = null
-        )
-        dao.insert(entity)
+        dao.insert(entity("delete_me", photographerName = "", color = null))
         dao.deleteById("delete_me")
         val all = dao.observeAll().first()
         assertEquals(0, all.size)
@@ -69,14 +68,8 @@ class FavoriteDaoTest {
 
     @Test
     fun isFavorite_returnsTrueWhenExists() = runBlocking {
-        val entity = FavoriteEntity(
-            id = "fav1", smallUrl = "", regularUrl = "",
-            fullUrl = "", htmlLink = "", photographerName = "",
-            photographerProfileUrl = "", color = null,
-            width = 0, height = 0, description = null
-        )
-        dao.insert(entity)
-        val fav = dao.isFavorite("fav1")
+        dao.insert(entity("fav1", photographerName = "", color = null))
+        val fav = dao.isFavorite("fav1").first()
         assertEquals(true, fav)
     }
 }

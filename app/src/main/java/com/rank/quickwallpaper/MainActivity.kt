@@ -19,6 +19,7 @@ import com.rank.quickwallpaper.ui.PaziaNavGraph
 import com.rank.quickwallpaper.ui.onboarding.OnboardingScreen
 import com.rank.quickwallpaper.ui.settings.SettingsViewModel
 import com.rank.quickwallpaper.ui.theme.PaziaTheme
+import com.rank.quickwallpaper.ui.theme.toSkin
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -58,6 +59,8 @@ class MainActivity : ComponentActivity() {
             val settings by settingsVm.settings.collectAsStateWithLifecycle()
 
             PaziaTheme(
+                skin = settings.selectedSkin.toSkin(),
+                darkTheme = settings.useDarkTheme,
                 dynamicColor = settings.useDynamicColors
             ) {
                 if (!onboardingDone) {

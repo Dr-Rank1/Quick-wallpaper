@@ -50,3 +50,10 @@ val PaziaGlassNav = Color(0xE80B0E14)
 // Shimmer
 val PaziaShimmerBase = Color(0xFF11131A)
 val PaziaShimmerHighlight = Color(0xFF1E212A)
+
+// Light theme
+val PaziaLightBackground = Color(0xFFF5F6F8)
+val PaziaLightSurface = Color(0xFFFFFFFF)
+val PaziaLightSurfaceVariant = Color(0xFFE8EAF0)
+val PaziaLightOnBackground = Color(0xFF12141A)
+val PaziaLightBorder = Color(0x1A12141A)

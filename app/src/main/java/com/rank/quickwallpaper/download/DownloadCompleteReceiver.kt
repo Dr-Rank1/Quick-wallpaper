@@ -18,8 +18,16 @@ object DownloadEventBus {
 
 class DownloadCompleteReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) return
+        if (intent?.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE || context == null) return
         val downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
-        if (downloadId != -1L) DownloadEventBus.emit(downloadId)
+        if (downloadId == -1L) return
+
+        // DownloadManager only returns this app's downloads, so spoofed IDs are ignored.
+        val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val owned = dm.query(DownloadManager.Query().setFilterById(downloadId))
+            ?.use { it.moveToFirst() } == true
+        if (!owned) return
+
+        DownloadEventBus.emit(downloadId)
     }
 }

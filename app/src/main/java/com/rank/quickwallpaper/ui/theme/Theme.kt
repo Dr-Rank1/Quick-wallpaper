@@ -3,63 +3,53 @@ package com.rank.quickwallpaper.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PaziaAccent,
-    onPrimary = PaziaOnAccent,
-    primaryContainer = PaziaAccent.copy(alpha = 0.12f),
-    secondary = PaziaSecondary,
-    onSecondary = PaziaOnAccent,
-    secondaryContainer = PaziaSecondaryDim,
-    background = PaziaBlack,
-    surface = PaziaSurface,
-    surfaceVariant = PaziaSurfaceVariant,
-    surfaceTint = PaziaAccent,
-    onBackground = PaziaWhite,
-    onSurface = PaziaWhite,
-    onSurfaceVariant = PaziaGrayLight,
-    outline = PaziaBorderMedium,
-    outlineVariant = PaziaBorderLight,
-    inverseSurface = PaziaWhiteDim,
-    inverseOnSurface = PaziaBlack,
-    error = PaziaError,
-    errorContainer = PaziaErrorDim,
-    inversePrimary = PaziaAccentLight
-)
+val LocalPaziaSkin = staticCompositionLocalOf { MidnightSkin }
 
 @Composable
 fun PaziaTheme(
-    dynamicColor: Boolean = true,
+    skin: PaziaSkin = MidnightSkin,
+    darkTheme: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    // Dynamic Material You only for Midnight so custom skins keep their identity.
+    val useDynamic = dynamicColor &&
+        skin.id == AppSkinId.MIDNIGHT &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        useDynamic -> {
             val context = LocalContext.current
-            dynamicDarkColorScheme(context)
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        else -> DarkColorScheme
+        darkTheme -> skin.darkColorScheme
+        else -> skin.lightColorScheme
     }
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = PaziaBlack.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = PaziaTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalPaziaSkin provides skin) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = skin.typography,
+            shapes = skin.shapes,
+            content = content
+        )
+    }
 }

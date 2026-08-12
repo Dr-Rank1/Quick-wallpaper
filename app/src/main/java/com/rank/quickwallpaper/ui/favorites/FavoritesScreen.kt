@@ -47,8 +47,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.data.local.entities.FavoriteEntity
-import com.rank.quickwallpaper.ui.theme.PaziaAccent
-import com.rank.quickwallpaper.ui.theme.PaziaError
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +85,7 @@ fun FavoritesScreen(
                         imageVector = Icons.Outlined.FavoriteBorder,
                         contentDescription = null,
                         modifier = Modifier.size(72.dp),
-                        tint = PaziaAccent.copy(alpha = 0.3f)
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                     )
                     Spacer(Modifier.height(20.dp))
                     Text(
@@ -158,7 +156,7 @@ private fun SwipeToDeleteFavorite(
         backgroundContent = {
             val color by animateColorAsState(
                 targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart)
-                    PaziaError else Color.Transparent,
+                    MaterialTheme.colorScheme.error else Color.Transparent,
                 label = "dismiss_bg"
             )
             Box(

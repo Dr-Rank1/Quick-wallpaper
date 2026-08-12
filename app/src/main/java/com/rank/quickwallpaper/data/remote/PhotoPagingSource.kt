@@ -44,6 +44,8 @@ class PhotoPagingSource(
             LoadResult.Error(e)
         } catch (e: HttpException) {
             LoadResult.Error(e)
+        } catch (e: Exception) {
+            LoadResult.Error(e)
         }
     }
 

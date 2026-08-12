@@ -21,6 +21,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -31,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -40,16 +43,20 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import com.rank.quickwallpaper.ui.components.ErrorState
 import com.rank.quickwallpaper.ui.components.NativeAdSlot
 import com.rank.quickwallpaper.ui.components.PhotoGridItem
 import com.rank.quickwallpaper.ui.components.ShimmerGrid
-import com.rank.quickwallpaper.ui.theme.PaziaAccent
 
 private const val AD_INTERVAL = 12
+
+private fun isAdSlot(position: Int): Boolean =
+    (position + 1) % (AD_INTERVAL + 1) == 0
+
+private fun photoIndex(position: Int): Int =
+    position - position / (AD_INTERVAL + 1)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,11 +71,19 @@ fun HomeScreen(
     val isRefreshing = photos.loadState.refresh is LoadState.Loading
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val randomPhotoId by viewModel.randomPhotoId.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val shuffleFallback = stringResource(R.string.error_shuffle)
 
     LaunchedEffect(randomPhotoId) {
         randomPhotoId?.let { id ->
             onRandomPhoto(id)
             viewModel.onRandomPhotoNavigated()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.shuffleError.collect { message ->
+            snackbarHostState.showSnackbar(message.ifBlank { shuffleFallback })
         }
     }
 
@@ -80,6 +95,7 @@ fun HomeScreen(
                 scrollBehavior = scrollBehavior
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { paddingValues ->
         Column(
@@ -118,21 +134,28 @@ fun HomeScreen(
                                         ShimmerGrid(count = 6)
                                     }
                                 } else {
+                                    val photoCount = photos.itemCount
+                                    val adCount = photoCount / AD_INTERVAL
+                                    val totalCount = photoCount + adCount
                                     items(
-                                        count = photos.itemCount,
-                                        key = photos.itemKey { it.id }
-                                    ) { index ->
-                                        val photo = photos[index] ?: return@items
-                                        PhotoGridItem(
-                                            photo = photo,
-                                            onClick = { onPhotoClick(photo.id) }
-                                        )
-                                    }
-
-                                    if (photos.itemCount > 0 && photos.itemCount % AD_INTERVAL == 0 &&
-                                        photos.loadState.append !is LoadState.Loading) {
-                                        item(span = StaggeredGridItemSpan.FullLine) {
+                                        count = totalCount,
+                                        key = { position ->
+                                            if (isAdSlot(position)) "ad_$position"
+                                            else photos.peek(photoIndex(position))?.id ?: "ph_$position"
+                                        },
+                                        span = { position ->
+                                            if (isAdSlot(position)) StaggeredGridItemSpan.FullLine
+                                            else StaggeredGridItemSpan.SingleLane
+                                        }
+                                    ) { position ->
+                                        if (isAdSlot(position)) {
                                             NativeAdSlot(Modifier.padding(vertical = 4.dp))
+                                        } else {
+                                            val photo = photos[photoIndex(position)] ?: return@items
+                                            PhotoGridItem(
+                                                photo = photo,
+                                                onClick = { onPhotoClick(photo.id) }
+                                            )
                                         }
                                     }
 
