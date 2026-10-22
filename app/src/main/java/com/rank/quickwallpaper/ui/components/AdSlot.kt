@@ -32,12 +32,12 @@ fun NativeAdSlot(modifier: Modifier = Modifier) {
         onDispose { adVm.releaseAd() }
     }
 
-    if (ad == null) return
+    val safeAd = ad ?: return
 
     AndroidView(
         modifier = modifier.fillMaxWidth().wrapContentHeight(),
-        factory = { ctx -> inflateAndBind(ctx, ad!!) },
-        update = { view -> bindNativeAd(view, ad!!) }
+        factory = { ctx -> inflateAndBind(ctx, safeAd) },
+        update = { view -> bindNativeAd(view, safeAd) }
     )
 }
 

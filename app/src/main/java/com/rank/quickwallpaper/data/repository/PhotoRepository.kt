@@ -58,15 +58,22 @@ class PhotoRepository @Inject constructor(
     ).flow
 
     suspend fun getRandomPhoto(): Result<Photo> = runCatching {
-        val randomPage = (1..50).random()
+        val randomPage = (1..20).random()
         val response = api.getCuratedPhotos(page = randomPage, perPage = 30)
         val photos = response.photos.map { it.toDomain() }
-        require(photos.isNotEmpty()) { "No photos found" }
-        photos.random()
+        if (photos.isNotEmpty()) {
+            photos.random()
+        } else {
+            val fallback = api.getCuratedPhotos(page = 1, perPage = 30)
+            val fallbackPhotos = fallback.photos.map { it.toDomain() }
+            require(fallbackPhotos.isNotEmpty()) { "No photos found" }
+            fallbackPhotos.random()
+        }
     }
 
     suspend fun getPhoto(id: String): Result<Photo> = runCatching {
-        api.getPhoto(id.toLong()).toDomain()
+        val numericId = id.toLongOrNull() ?: throw IllegalArgumentException("Invalid photo ID: $id")
+        api.getPhoto(numericId).toDomain()
     }
 
     suspend fun getSimilarPhotos(photo: Photo): Result<List<Photo>> = runCatching {
@@ -192,7 +199,7 @@ class PhotoRepository @Inject constructor(
         ),
         color = entity.color,
         downloadLocation = entity.downloadLocation,
-        htmlLink = entity.photographerProfileUrl
+        htmlLink = "https://www.pexels.com/photo/${entity.id}/"
     )
 
     fun historyToPhoto(entity: HistoryEntity): Photo = Photo(
@@ -216,6 +223,6 @@ class PhotoRepository @Inject constructor(
         ),
         color = entity.color,
         downloadLocation = "",
-        htmlLink = ""
+        htmlLink = "https://www.pexels.com/photo/${entity.id}/"
     )
 }

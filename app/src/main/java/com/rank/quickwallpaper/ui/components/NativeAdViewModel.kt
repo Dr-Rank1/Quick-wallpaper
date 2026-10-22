@@ -24,7 +24,7 @@ class NativeAdViewModel : ViewModel() {
         val preferences = NativeAdPreferences().apply {
             setAutoBitmapDownload(true)
         }
-        val nativeAd = StartAppNativeAd(context).apply {
+        val nativeAd = StartAppNativeAd(context.applicationContext).apply {
             setPreferences(preferences)
         }
         startAppNativeAd = nativeAd

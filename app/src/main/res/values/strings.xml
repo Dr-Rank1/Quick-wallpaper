@@ -47,6 +47,7 @@
 
     <!-- Favorites -->
     <string name="favorites_empty">No favorites yet.\nTap the heart icon on any photo.</string>
+    <string name="favorites_empty_hint">Tap the ♡ icon on any wallpaper to save it here</string>
 
     <!-- Error / state -->
     <string name="error_load">Couldn\'t load photos. Check your connection.</string>
@@ -143,4 +144,10 @@
     <string name="clear_history">Clear viewing history</string>
     <string name="clear_history_desc">Remove recently viewed wallpapers</string>
     <string name="history_cleared">Viewing history cleared</string>
+
+    <!-- Wallpaper Preview Simulator -->
+    <string name="preview_wallpaper">Preview</string>
+    <string name="preview_lock_screen">Lock Screen</string>
+    <string name="preview_home_screen">Home Screen</string>
+    <string name="preview_exit">Exit</string>
 </resources>

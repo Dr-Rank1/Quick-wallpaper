@@ -76,8 +76,8 @@ fun HomeScreen(
     onPhotoClick: (String) -> Unit,
     onSearchClick: () -> Unit,
     onRandomPhoto: (String) -> Unit,
-    adsRemoved: Boolean = false,
     modifier: Modifier = Modifier,
+    adsRemoved: Boolean = false,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val photos = viewModel.photos.collectAsLazyPagingItems()
@@ -315,7 +315,7 @@ private fun HomeTopBar(
     TopAppBar(
         title = {
             Text(
-                text = "Pazia",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary

@@ -20,7 +20,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): PaziaDatabase =
         Room.databaseBuilder(context, PaziaDatabase::class.java, "pazia.db")
-            .addMigrations(PaziaDatabase.MIGRATION_1_2)
+            .addMigrations(PaziaDatabase.MIGRATION_1_2, PaziaDatabase.MIGRATION_2_3)
             .build()
 
     @Provides

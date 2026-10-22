@@ -89,6 +89,7 @@ fun SettingsScreen(
     val historyClearedMsg = stringResource(R.string.history_cleared)
     val shareTextMsg = stringResource(R.string.settings_share_text)
     val resetDoneMsg = stringResource(R.string.settings_reset_done)
+    val adsRemovedActiveMsg = stringResource(R.string.ads_removed_active)
 
     Scaffold(
         topBar = {
@@ -258,7 +259,7 @@ fun SettingsScreen(
                                 if (unlocked) {
                                     scope.launch {
                                         snackbarHostState.showSnackbar(
-                                            context.getString(R.string.ads_removed_active)
+                                            adsRemovedActiveMsg
                                         )
                                     }
                                 }
@@ -417,9 +418,7 @@ fun SettingsScreen(
             TextButton(
                 onClick = {
                     scope.launch {
-                        viewModel.setDarkTheme(true)
-                        viewModel.setDynamicColors(true)
-                        viewModel.setDownloadQuality(DownloadQuality.FULL)
+                        viewModel.resetToDefaults()
                         snackbarHostState.showSnackbar(resetDoneMsg)
                     }
                 },

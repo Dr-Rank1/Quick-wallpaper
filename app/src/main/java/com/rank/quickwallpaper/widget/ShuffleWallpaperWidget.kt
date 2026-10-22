@@ -23,11 +23,23 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.room.Room
-import com.rank.quickwallpaper.data.local.PaziaDatabase
+import androidx.glance.LocalContext
+import com.rank.quickwallpaper.R
+import com.rank.quickwallpaper.data.repository.PhotoRepository
 import com.rank.quickwallpaper.service.WallpaperApplier
 import com.rank.quickwallpaper.service.WallpaperFit
 import com.rank.quickwallpaper.service.WallpaperTarget
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface WidgetEntryPoint {
+    fun photoRepository(): PhotoRepository
+    fun wallpaperApplier(): WallpaperApplier
+}
 
 class ShuffleWallpaperWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -41,6 +53,7 @@ class ShuffleWallpaperWidget : GlanceAppWidget() {
 
 @Composable
 private fun WidgetContent() {
+    val context = LocalContext.current
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -50,7 +63,7 @@ private fun WidgetContent() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Shuffle wallpaper",
+            text = context.getString(R.string.widget_shuffle_label),
             style = TextStyle(
                 color = ColorProvider(Color.White),
                 fontWeight = FontWeight.Bold
@@ -69,21 +82,25 @@ class ShuffleWallpaperAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        val db = Room.databaseBuilder(context, PaziaDatabase::class.java, "pazia.db")
-            .addMigrations(PaziaDatabase.MIGRATION_1_2)
-            .build()
-        try {
-            val favorites = db.favoriteDao().getAll()
-            if (favorites.isEmpty()) return
+        val entryPoint = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            WidgetEntryPoint::class.java
+        )
+        val repository = entryPoint.photoRepository()
+        val applier = entryPoint.wallpaperApplier()
+        val favorites = repository.getFavoriteEntities()
+        val (imageUrl, localPath) = if (favorites.isNotEmpty()) {
             val pick = favorites.random()
-            WallpaperApplier(context).apply(
-                imageUrl = pick.fullUrl,
-                target = WallpaperTarget.HOME,
-                fit = WallpaperFit.FILL,
-                localPath = pick.localCachedPath.takeIf { it.isNotBlank() }
-            )
-        } finally {
-            db.close()
+            Pair<String, String?>(pick.fullUrl, pick.localCachedPath.takeIf { it.isNotBlank() })
+        } else {
+            val fallback = repository.getRandomPhoto().getOrNull() ?: return
+            Pair<String, String?>(fallback.fullUrl.ifBlank { fallback.regularUrl }, null)
         }
+        applier.apply(
+            imageUrl = imageUrl,
+            target = WallpaperTarget.HOME,
+            fit = WallpaperFit.FILL,
+            localPath = localPath
+        )
     }
 }

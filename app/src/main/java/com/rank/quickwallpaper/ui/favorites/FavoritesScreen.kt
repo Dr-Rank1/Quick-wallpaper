@@ -105,7 +105,7 @@ fun FavoritesScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Tap the ♡ icon on any wallpaper to save it here",
+                        text = stringResource(R.string.favorites_empty_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                         textAlign = TextAlign.Center

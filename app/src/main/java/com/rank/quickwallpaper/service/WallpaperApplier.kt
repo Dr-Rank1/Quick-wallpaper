@@ -7,8 +7,11 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
+import android.os.Build
 import android.util.DisplayMetrics
 import android.view.WindowManager
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
@@ -72,7 +75,7 @@ class WallpaperApplier @Inject constructor(
         val (sw, sh) = screenSize()
         if (sw <= 0 || sh <= 0) return source
         return when (fit) {
-            WallpaperFit.STRETCH -> Bitmap.createScaledBitmap(source, sw, sh, true)
+            WallpaperFit.STRETCH -> source.scale(sw, sh)
             WallpaperFit.FIT -> containBitmap(source, sw, sh)
             WallpaperFit.FILL -> coverBitmap(source, sw, sh)
         }
@@ -82,32 +85,45 @@ class WallpaperApplier @Inject constructor(
         val scale = maxOf(sw.toFloat() / source.width, sh.toFloat() / source.height)
         val tw = (source.width * scale).toInt().coerceAtLeast(1)
         val th = (source.height * scale).toInt().coerceAtLeast(1)
-        val scaled = Bitmap.createScaledBitmap(source, tw, th, true)
+        val scaled = source.scale(tw, th)
         val x = ((tw - sw) / 2).coerceAtLeast(0)
         val y = ((th - sh) / 2).coerceAtLeast(0)
-        return Bitmap.createBitmap(scaled, x, y, sw.coerceAtMost(scaled.width), sh.coerceAtMost(scaled.height))
+        val cropped = Bitmap.createBitmap(scaled, x, y, sw.coerceAtMost(scaled.width), sh.coerceAtMost(scaled.height))
+        if (scaled != source && scaled != cropped) {
+            scaled.recycle()
+        }
+        return cropped
     }
 
     private fun containBitmap(source: Bitmap, sw: Int, sh: Int): Bitmap {
         val scale = minOf(sw.toFloat() / source.width, sh.toFloat() / source.height)
         val tw = (source.width * scale).toInt().coerceAtLeast(1)
         val th = (source.height * scale).toInt().coerceAtLeast(1)
-        val scaled = Bitmap.createScaledBitmap(source, tw, th, true)
-        val out = Bitmap.createBitmap(sw, sh, Bitmap.Config.ARGB_8888)
+        val scaled = source.scale(tw, th)
+        val out = createBitmap(sw, sh, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(out)
         canvas.drawColor(android.graphics.Color.BLACK)
         val left = (sw - tw) / 2f
         val top = (sh - th) / 2f
         canvas.drawBitmap(scaled, left, top, Paint(Paint.FILTER_BITMAP_FLAG))
+        if (scaled != source && scaled != out) {
+            scaled.recycle()
+        }
         return out
     }
 
-    @Suppress("DEPRECATION")
     private fun screenSize(): Pair<Int, Int> {
         val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val metrics = DisplayMetrics()
-        wm.defaultDisplay.getRealMetrics(metrics)
-        return metrics.widthPixels to metrics.heightPixels
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = wm.currentWindowMetrics.bounds
+            bounds.width() to bounds.height()
+        } else {
+            @Suppress("DEPRECATION")
+            val metrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            wm.defaultDisplay.getRealMetrics(metrics)
+            metrics.widthPixels to metrics.heightPixels
+        }
     }
 
     @SuppressLint("MissingPermission")
