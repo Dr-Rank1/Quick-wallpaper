@@ -29,6 +29,7 @@ import com.rank.quickwallpaper.download.DownloadStatus
 import com.rank.quickwallpaper.download.WallpaperDownloader
 import com.rank.quickwallpaper.service.WallpaperApplier
 import com.rank.quickwallpaper.service.WallpaperFit
+import com.rank.quickwallpaper.service.WallpaperNotificationHelper
 import com.rank.quickwallpaper.service.WallpaperTarget
 import com.rank.quickwallpaper.ui.settings.DownloadQuality
 import com.rank.quickwallpaper.ui.settings.SettingsViewModel
@@ -80,6 +81,7 @@ class DetailViewModel @Inject constructor(
     private val interstitialAdManager: InterstitialAdManager,
     private val rewardedAdManager: RewardedAdManager,
     private val offlineCache: FavoriteOfflineCache,
+    private val notificationHelper: WallpaperNotificationHelper,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -277,10 +279,36 @@ class DetailViewModel @Inject constructor(
                 fit = wallpaperFit.value,
                 localPath = local
             )
-                .onSuccess { _wallpaperState.value = WallpaperState.Success }
+                .onSuccess {
+                    _wallpaperState.value = WallpaperState.Success
+                    // Post a rich notification with thumbnail so user knows even if they navigate away
+                    postWallpaperSetNotification(state.photo, target)
+                }
                 .onFailure { e ->
                     _wallpaperState.value = WallpaperState.Error(e.message ?: "Failed to apply")
                 }
+        }
+    }
+
+    /** Fetches a small thumbnail bitmap and posts the wallpaper-set notification. */
+    private fun postWallpaperSetNotification(photo: com.rank.quickwallpaper.domain.model.Photo, target: WallpaperTarget) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val bitmap = runCatching {
+                val request = coil3.request.ImageRequest.Builder(appContext)
+                    .data(photo.smallUrl)
+                    .size(512, 512)
+                    .allowHardware(false)
+                    .build()
+                val result = coil3.SingletonImageLoader.get(appContext).execute(request)
+                if (result is coil3.request.SuccessResult) result.image.toBitmap() else null
+            }.getOrNull()
+
+            notificationHelper.notify(
+                target = target,
+                photographer = photo.photographer.name,
+                thumbnail = bitmap,
+                photoId = photo.id
+            )
         }
     }
 

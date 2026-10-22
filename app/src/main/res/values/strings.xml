@@ -145,6 +145,21 @@
     <string name="clear_history_desc">Remove recently viewed wallpapers</string>
     <string name="history_cleared">Viewing history cleared</string>
 
+    <!-- Notifications -->
+    <string name="notif_channel_wallpaper_set">Wallpaper Applied</string>
+    <string name="notif_channel_wallpaper_set_desc">Notifies you when a wallpaper is successfully set</string>
+    <string name="notif_channel_auto_wallpaper">Auto Wallpaper</string>
+    <string name="notif_channel_auto_wallpaper_desc">Background wallpaper rotation updates</string>
+    <string name="notif_wallpaper_set_home">🖼 Home Screen Updated</string>
+    <string name="notif_wallpaper_set_lock">🔒 Lock Screen Updated</string>
+    <string name="notif_wallpaper_set_both">✨ Wallpaper Set on Both Screens</string>
+    <string name="notif_wallpaper_set_body">Photo by %1$s · Tap to explore</string>
+    <string name="notif_wallpaper_set_body_generic">Your new wallpaper is live. Tap to explore more.</string>
+
+    <!-- Detail screen additions -->
+    <string name="megapixels">%1$.1f MP</string>
+    <string name="color_palette">Color palette</string>
+
     <!-- Wallpaper Preview Simulator -->
     <string name="preview_wallpaper">Preview</string>
     <string name="preview_lock_screen">Lock Screen</string>

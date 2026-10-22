@@ -14,6 +14,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
@@ -62,6 +64,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -75,9 +78,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -88,6 +93,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -127,6 +133,7 @@ fun DetailScreen(
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     var showCheckmark by remember { mutableStateOf(false) }
+    var showSetCheckmark by remember { mutableStateOf(false) }
 
     val wallpaperSetSuccessMsg = stringResource(R.string.wallpaper_set_success)
     val downloadInProgressMsg = stringResource(R.string.download_in_progress)
@@ -143,7 +150,11 @@ fun DetailScreen(
     LaunchedEffect(wallpaperState) {
         when (val state = wallpaperState) {
             is WallpaperState.Success -> {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                showSetCheckmark = true
                 snackbarHost.showSnackbar(wallpaperSetSuccessMsg)
+                delay(2_500)
+                showSetCheckmark = false
                 viewModel.resetWallpaperState()
             }
             is WallpaperState.Error -> {
@@ -313,6 +324,22 @@ fun DetailScreen(
                                     }
                                 }
                             }
+                            .pointerInput(Unit) {
+                                // Double-tap: toggle zoom between 1× and 2.5× centred at tap point
+                                detectTapGestures(
+                                    onDoubleTap = { tapOffset ->
+                                        if (scale > 1.2f) {
+                                            scale = 1f
+                                            offsetX = 0f
+                                            offsetY = 0f
+                                        } else {
+                                            scale = 2.5f
+                                            offsetX = (size.width / 2f - tapOffset.x) * (scale - 1f)
+                                            offsetY = (size.height / 2f - tapOffset.y) * (scale - 1f)
+                                        }
+                                    }
+                                )
+                            }
                     )
 
                     Row(
@@ -409,6 +436,68 @@ fun DetailScreen(
                                 maxLines = 2
                             )
 
+                            Spacer(Modifier.height(8.dp))
+
+                            // Megapixel chip + color palette swatches
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                // Megapixel chip
+                                val megapixels = (photo.width.toLong() * photo.height.toLong()) / 1_000_000f
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            Color.White.copy(alpha = 0.15f),
+                                            shape = MaterialTheme.shapes.small
+                                        )
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.megapixels, megapixels),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        fontSize = 10.sp
+                                    )
+                                }
+                                // Color palette swatches derived from Pexels avg color
+                                val baseColor = remember(photo.color) {
+                                    runCatching { Color(photo.color.orEmpty().toColorInt()) }
+                                        .getOrDefault(Color(0xFF6C63FF))
+                                }
+                                // Generate 5 tonal swatches: shades / tints of the base color
+                                val swatches = remember(baseColor) {
+                                    listOf(
+                                        baseColor.copy(red = (baseColor.red * 0.5f).coerceIn(0f, 1f),
+                                            green = (baseColor.green * 0.5f).coerceIn(0f, 1f),
+                                            blue = (baseColor.blue * 0.5f).coerceIn(0f, 1f)),
+                                        baseColor.copy(red = (baseColor.red * 0.75f).coerceIn(0f, 1f),
+                                            green = (baseColor.green * 0.75f).coerceIn(0f, 1f),
+                                            blue = (baseColor.blue * 0.75f).coerceIn(0f, 1f)),
+                                        baseColor,
+                                        baseColor.copy(
+                                            red = (baseColor.red + (1f - baseColor.red) * 0.4f),
+                                            green = (baseColor.green + (1f - baseColor.green) * 0.4f),
+                                            blue = (baseColor.blue + (1f - baseColor.blue) * 0.4f)
+                                        ),
+                                        baseColor.copy(
+                                            red = (baseColor.red + (1f - baseColor.red) * 0.75f),
+                                            green = (baseColor.green + (1f - baseColor.green) * 0.75f),
+                                            blue = (baseColor.blue + (1f - baseColor.blue) * 0.75f)
+                                        )
+                                    )
+                                }
+                                swatches.forEach { swatch ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .clip(CircleShape)
+                                            .background(swatch)
+                                    )
+                                }
+                            }
+
                             Spacer(Modifier.height(12.dp))
 
                             if (similar.isNotEmpty()) {
@@ -447,29 +536,62 @@ fun DetailScreen(
                                 Button(
                                     onClick = { showWallpaperSheet = true },
                                     modifier = Modifier.weight(1f).height(50.dp),
-                                    enabled = wallpaperState !is WallpaperState.Applying,
+                                    enabled = wallpaperState !is WallpaperState.Applying && !showSetCheckmark,
                                     shape = MaterialTheme.shapes.medium,
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
+                                        containerColor = if (showSetCheckmark)
+                                            MaterialTheme.colorScheme.primary.copy(green = 0.85f)
+                                        else MaterialTheme.colorScheme.primary
                                     )
                                 ) {
-                                    if (wallpaperState is WallpaperState.Applying) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(18.dp),
-                                            strokeWidth = 2.dp,
-                                            color = Color.White
-                                        )
-                                    } else {
-                                        Icon(
-                                            Icons.Outlined.Wallpaper,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            text = stringResource(R.string.set_wallpaper),
-                                            fontWeight = FontWeight.SemiBold
-                                        )
+                                    val setButtonScale by animateFloatAsState(
+                                        targetValue = if (showSetCheckmark) 1.08f else 1f,
+                                        animationSpec = spring(dampingRatio = 0.4f, stiffness = 600f),
+                                        label = "set_btn_scale"
+                                    )
+                                    AnimatedContent(
+                                        targetState = when {
+                                            wallpaperState is WallpaperState.Applying -> "applying"
+                                            showSetCheckmark -> "done"
+                                            else -> "idle"
+                                        },
+                                        transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) },
+                                        label = "set_btn_content",
+                                        modifier = Modifier.scale(setButtonScale)
+                                    ) { target ->
+                                        when (target) {
+                                            "applying" -> CircularProgressIndicator(
+                                                modifier = Modifier.size(18.dp),
+                                                strokeWidth = 2.dp,
+                                                color = Color.White
+                                            )
+                                            "done" -> Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    Icons.Filled.Check,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(20.dp),
+                                                    tint = Color.White
+                                                )
+                                                Spacer(Modifier.width(6.dp))
+                                                Text(
+                                                    text = "Applied!",
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White
+                                                )
+                                            }
+                                            else -> Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    Icons.Outlined.Wallpaper,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(Modifier.width(8.dp))
+                                                Text(
+                                                    text = stringResource(R.string.set_wallpaper),
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+                                        }
                                     }
                                 }
 

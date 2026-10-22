@@ -9,4 +9,6 @@
     <color name="pazia_gray_light">#8A8D98</color>
     <color name="pazia_border_light">#0DFFFFFF</color>
     <color name="pazia_overlay_light">#08FFFFFF</color>
+    <!-- Notification accent tint (matches brand purple) -->
+    <color name="notification_accent">#6C63FF</color>
 </resources>
