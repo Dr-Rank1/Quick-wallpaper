@@ -86,6 +86,17 @@
                 tools:node="remove" />
         </provider>
 
+        <service
+            android:name=".service.WallpaperShuffleTileService"
+            android:icon="@drawable/ic_notification_wallpaper"
+            android:label="@string/tile_shuffle_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

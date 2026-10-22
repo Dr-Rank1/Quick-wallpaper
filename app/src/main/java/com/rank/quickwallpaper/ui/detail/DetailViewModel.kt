@@ -82,6 +82,7 @@ class DetailViewModel @Inject constructor(
     private val rewardedAdManager: RewardedAdManager,
     private val offlineCache: FavoriteOfflineCache,
     private val notificationHelper: WallpaperNotificationHelper,
+    private val reviewManager: com.rank.quickwallpaper.service.InAppReviewManager,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -98,6 +99,42 @@ class DetailViewModel @Inject constructor(
 
     private val _similar = MutableStateFlow<List<Photo>>(emptyList())
     val similar: StateFlow<List<Photo>> = _similar
+
+    private val _blurRadius = MutableStateFlow(0)
+    val blurRadius: StateFlow<Int> = _blurRadius
+
+    private val _dimPercent = MutableStateFlow(0f)
+    val dimPercent: StateFlow<Float> = _dimPercent
+
+    private val _showReviewPrompt = MutableStateFlow(false)
+    val showReviewPrompt: StateFlow<Boolean> = _showReviewPrompt
+
+    fun onRateApp(context: Context) {
+        viewModelScope.launch {
+            _showReviewPrompt.value = false
+            reviewManager.openPlayStore(context)
+        }
+    }
+
+    fun onDismissReview() {
+        viewModelScope.launch {
+            _showReviewPrompt.value = false
+            reviewManager.dismissForNow()
+        }
+    }
+
+    fun setBlurRadius(radius: Int) {
+        _blurRadius.value = radius.coerceIn(0, 25)
+    }
+
+    fun setDimPercent(dim: Float) {
+        _dimPercent.value = dim.coerceIn(0f, 0.6f)
+    }
+
+    fun resetAdjustments() {
+        _blurRadius.value = 0
+        _dimPercent.value = 0f
+    }
 
     val downloadQuality: StateFlow<DownloadQuality> = dataStore.data.map { prefs ->
         prefs[SettingsViewModel.KEY_DOWNLOAD_QUALITY]
@@ -277,12 +314,17 @@ class DetailViewModel @Inject constructor(
                 imageUrl = state.photo.fullUrl,
                 target = target,
                 fit = wallpaperFit.value,
-                localPath = local
+                localPath = local,
+                blurRadius = _blurRadius.value,
+                dimPercent = _dimPercent.value
             )
                 .onSuccess {
                     _wallpaperState.value = WallpaperState.Success
                     // Post a rich notification with thumbnail so user knows even if they navigate away
                     postWallpaperSetNotification(state.photo, target)
+                    if (reviewManager.recordWallpaperApplied()) {
+                        _showReviewPrompt.value = true
+                    }
                 }
                 .onFailure { e ->
                     _wallpaperState.value = WallpaperState.Error(e.message ?: "Failed to apply")
@@ -368,6 +410,12 @@ class DetailViewModel @Inject constructor(
                 }
             }
             activity.startActivity(Intent.createChooser(send, null))
+        }
+    }
+
+    fun maybeShowInterstitial(activity: Activity) {
+        if (!adsRemoved.value) {
+            interstitialAdManager.recordActionAndMaybeShow(activity)
         }
     }
 
