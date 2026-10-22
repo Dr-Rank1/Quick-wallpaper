@@ -7,12 +7,16 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -29,22 +33,32 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,37 +70,29 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -111,9 +117,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.rank.quickwallpaper.R
+import com.rank.quickwallpaper.domain.model.Photo
 import com.rank.quickwallpaper.service.WallpaperTarget
 import com.rank.quickwallpaper.ui.components.ErrorState
-import com.rank.quickwallpaper.ui.components.PhotoGridItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -130,17 +136,19 @@ fun DetailScreen(
     val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
     val rewardedReady by viewModel.rewardedReady.collectAsStateWithLifecycle()
     val similar by viewModel.similar.collectAsStateWithLifecycle()
-    val blurRadius by viewModel.blurRadius.collectAsStateWithLifecycle()
-    val dimPercent by viewModel.dimPercent.collectAsStateWithLifecycle()
     val showReviewPrompt by viewModel.showReviewPrompt.collectAsStateWithLifecycle()
+
     val snackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showWallpaperSheet by remember { mutableStateOf(false) }
+    var showInfoSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+    val infoSheetState = rememberModalBottomSheetState()
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     var showCheckmark by remember { mutableStateOf(false) }
     var showSetCheckmark by remember { mutableStateOf(false) }
+    var isUiVisible by remember { mutableStateOf(true) }
 
     val wallpaperSetSuccessMsg = stringResource(R.string.wallpaper_set_success)
     val downloadInProgressMsg = stringResource(R.string.download_in_progress)
@@ -221,9 +229,7 @@ fun DetailScreen(
         when (val state = uiState) {
             is DetailUiState.Loading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             is DetailUiState.Error -> {
@@ -241,7 +247,7 @@ fun DetailScreen(
                 var heroReady by remember { mutableStateOf(false) }
                 val heroAlpha by animateFloatAsState(
                     targetValue = if (heroReady) 1f else 0f,
-                    animationSpec = tween(500, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                    animationSpec = tween(400),
                     label = "hero_alpha"
                 )
                 LaunchedEffect(Unit) { heroReady = true }
@@ -249,11 +255,7 @@ fun DetailScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .graphicsLayer(
-                            alpha = heroAlpha,
-                            scaleX = 0.92f + 0.08f * heroAlpha,
-                            scaleY = 0.92f + 0.08f * heroAlpha
-                        )
+                        .graphicsLayer(alpha = heroAlpha)
                 ) {
                     var scale by remember { mutableFloatStateOf(1f) }
                     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -261,6 +263,7 @@ fun DetailScreen(
                     var parallaxX by remember { mutableFloatStateOf(0f) }
                     var parallaxY by remember { mutableFloatStateOf(0f) }
 
+                    // Gravity parallax sensor
                     DisposableEffect(Unit) {
                         val sensorManager = context.getSystemService(android.content.Context.SENSOR_SERVICE)
                             as android.hardware.SensorManager
@@ -268,8 +271,8 @@ fun DetailScreen(
                         val listener = object : android.hardware.SensorEventListener {
                             override fun onSensorChanged(event: android.hardware.SensorEvent?) {
                                 val values = event?.values ?: return
-                                parallaxX = (-values[0] * 8f).coerceIn(-24f, 24f)
-                                parallaxY = (values[1] * 6f).coerceIn(-18f, 18f)
+                                parallaxX = (-values[0] * 7f).coerceIn(-20f, 20f)
+                                parallaxY = (values[1] * 5f).coerceIn(-15f, 15f)
                             }
                             override fun onAccuracyChanged(sensor: android.hardware.Sensor?, accuracy: Int) {}
                         }
@@ -281,25 +284,28 @@ fun DetailScreen(
                         onDispose { sensorManager.unregisterListener(listener) }
                     }
 
-                    val placeholderColor = runCatching {
-                        Color(photo.color.orEmpty().toColorInt())
-                    }.getOrDefault(Color(0xFF1E1E1E))
+                    val placeholderColor = remember(photo.color) {
+                        runCatching { Color(photo.color.orEmpty().toColorInt()) }
+                            .getOrDefault(Color(0xFF141414))
+                    }
 
+                    // Low-res thumbnail placeholder
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(photo.smallUrl)
                             .memoryCacheKey(photo.id)
                             .diskCacheKey(photo.id)
-                            .size(800, 800)
+                            .size(600, 600)
                             .scale(Scale.FIT)
                             .build(),
                         contentDescription = null,
-                        contentScale = ContentScale.Fit,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxSize()
                             .background(placeholderColor)
                     )
 
+                    // Full-resolution image with pinch/pan, double-tap zoom & tap to toggle UI
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(photo.regularUrl)
@@ -307,10 +313,10 @@ fun DetailScreen(
                             .diskCacheKey("${photo.id}_hq")
                             .size(Size.ORIGINAL)
                             .scale(Scale.FIT)
-                            .crossfade(400)
+                            .crossfade(300)
                             .build(),
                         contentDescription = photo.description,
-                        contentScale = ContentScale.Fit,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxSize()
                             .graphicsLayer(
@@ -332,8 +338,10 @@ fun DetailScreen(
                                 }
                             }
                             .pointerInput(Unit) {
-                                // Double-tap: toggle zoom between 1× and 2.5× centred at tap point
                                 detectTapGestures(
+                                    onTap = {
+                                        isUiVisible = !isUiVisible
+                                    },
                                     onDoubleTap = { tapOffset ->
                                         if (scale > 1.2f) {
                                             scale = 1f
@@ -347,57 +355,94 @@ fun DetailScreen(
                                     }
                                 )
                             }
-                            .blur(if (blurRadius > 0) blurRadius.dp else 0.dp)
                     )
 
-                    if (dimPercent > 0f) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = dimPercent))
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent)
-                                )
-                            )
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = {
-                            val activity = context as? ComponentActivity
-                            activity?.let { viewModel.maybeShowInterstitial(it) }
-                            onBack()
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.back),
-                                tint = Color.White
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                previewMode = if (previewMode == PreviewMode.NONE) PreviewMode.LOCK_SCREEN else PreviewMode.NONE
-                            }
-                        ) {
-                            Icon(
-                                imageVector = if (previewMode != PreviewMode.NONE) Icons.Filled.VisibilityOff else Icons.Outlined.Visibility,
-                                contentDescription = stringResource(R.string.preview_wallpaper),
-                                tint = if (previewMode != PreviewMode.NONE) MaterialTheme.colorScheme.primary else Color.White
-                            )
-                        }
-                    }
-
+                    // Top Bar (Glass Capsule Buttons)
                     AnimatedVisibility(
-                        visible = previewMode == PreviewMode.NONE,
+                        visible = isUiVisible && previewMode == PreviewMode.NONE,
+                        enter = fadeIn() + slideInVertically { -it },
+                        exit = fadeOut() + slideOutVertically { -it },
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .windowInsetsPadding(WindowInsets.statusBars)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Back Button
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Black.copy(alpha = 0.5f))
+                                    .clickable {
+                                        val activity = context as? ComponentActivity
+                                        activity?.let { viewModel.maybeShowInterstitial(it) }
+                                        onBack()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.back),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                // Info button
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.5f))
+                                        .clickable { showInfoSheet = true },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Info,
+                                        contentDescription = "Photo Details",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                // Preview overlay eye button
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (previewMode != PreviewMode.NONE)
+                                                MaterialTheme.colorScheme.primary
+                                            else Color.Black.copy(alpha = 0.5f)
+                                        )
+                                        .clickable {
+                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            previewMode = if (previewMode == PreviewMode.NONE)
+                                                PreviewMode.LOCK_SCREEN else PreviewMode.NONE
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (previewMode != PreviewMode.NONE)
+                                            Icons.Filled.VisibilityOff else Icons.Outlined.Visibility,
+                                        contentDescription = stringResource(R.string.preview_wallpaper),
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Floating Glassmorphic Bottom Action Capsule
+                    AnimatedVisibility(
+                        visible = isUiVisible && previewMode == PreviewMode.NONE,
                         enter = fadeIn() + slideInVertically { it },
                         exit = fadeOut() + slideOutVertically { it },
                         modifier = Modifier.align(Alignment.BottomCenter)
@@ -405,179 +450,53 @@ fun DetailScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
-                                    )
-                                )
                                 .windowInsetsPadding(WindowInsets.navigationBars)
-                                .padding(
-                                    start = 20.dp,
-                                    end = 20.dp,
-                                    top = 40.dp,
-                                    bottom = 16.dp
-                                )
+                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            TextButton(
-                                onClick = {
-                                    runCatching {
-                                        context.startActivity(
-                                            Intent(
-                                                Intent.ACTION_VIEW,
-                                                photo.photographer.profileUrl.toUri()
-                                            )
-                                        )
-                                    }
-                                },
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.photo_by, photo.photographer.name),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.White.copy(alpha = 0.85f),
-                                    textDecoration = TextDecoration.Underline,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-
-                            Spacer(Modifier.height(4.dp))
-
-                            Text(
-                                text = buildString {
-                                    append("${photo.width} × ${photo.height}")
-                                    photo.description?.takeIf { it.isNotBlank() }?.let {
-                                        append("  ·  ")
-                                        append(it.take(60))
-                                    }
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.55f),
-                                maxLines = 2
-                            )
-
-                            Spacer(Modifier.height(8.dp))
-
-                            // Megapixel chip + color palette swatches
+                            // Floating Pill Container
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Megapixel chip
-                                val megapixels = (photo.width.toLong() * photo.height.toLong()) / 1_000_000f
-                                Box(
-                                    modifier = Modifier
-                                        .background(
-                                            Color.White.copy(alpha = 0.15f),
-                                            shape = MaterialTheme.shapes.small
-                                        )
-                                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.megapixels, megapixels),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.9f),
-                                        fontSize = 10.sp
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(32.dp))
+                                    .background(Color.Black.copy(alpha = 0.65f))
+                                    .border(
+                                        width = 1.dp,
+                                        color = Color.White.copy(alpha = 0.12f),
+                                        shape = RoundedCornerShape(32.dp)
                                     )
-                                }
-                                // Color palette swatches derived from Pexels avg color
-                                val baseColor = remember(photo.color) {
-                                    runCatching { Color(photo.color.orEmpty().toColorInt()) }
-                                        .getOrDefault(Color(0xFF6C63FF))
-                                }
-                                // Generate 5 tonal swatches: shades / tints of the base color
-                                val swatches = remember(baseColor) {
-                                    listOf(
-                                        baseColor.copy(red = (baseColor.red * 0.5f).coerceIn(0f, 1f),
-                                            green = (baseColor.green * 0.5f).coerceIn(0f, 1f),
-                                            blue = (baseColor.blue * 0.5f).coerceIn(0f, 1f)),
-                                        baseColor.copy(red = (baseColor.red * 0.75f).coerceIn(0f, 1f),
-                                            green = (baseColor.green * 0.75f).coerceIn(0f, 1f),
-                                            blue = (baseColor.blue * 0.75f).coerceIn(0f, 1f)),
-                                        baseColor,
-                                        baseColor.copy(
-                                            red = (baseColor.red + (1f - baseColor.red) * 0.4f),
-                                            green = (baseColor.green + (1f - baseColor.green) * 0.4f),
-                                            blue = (baseColor.blue + (1f - baseColor.blue) * 0.4f)
-                                        ),
-                                        baseColor.copy(
-                                            red = (baseColor.red + (1f - baseColor.red) * 0.75f),
-                                            green = (baseColor.green + (1f - baseColor.green) * 0.75f),
-                                            blue = (baseColor.blue + (1f - baseColor.blue) * 0.75f)
-                                        )
-                                    )
-                                }
-                                swatches.forEach { swatch ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(18.dp)
-                                            .clip(CircleShape)
-                                            .background(swatch)
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.height(12.dp))
-
-                            if (similar.isNotEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.similar_photos),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = Color.White.copy(alpha = 0.85f),
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    similar.take(4).forEach { related ->
-                                        AsyncImage(
-                                            model = related.thumbUrl,
-                                            contentDescription = related.description,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(64.dp)
-                                                .clip(MaterialTheme.shapes.small)
-                                                .clickable { onRelatedPhoto(related.id) }
-                                        )
-                                    }
-                                }
-                                Spacer(Modifier.height(12.dp))
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                // Primary Set Wallpaper Button
+                                val setButtonScale by animateFloatAsState(
+                                    targetValue = if (showSetCheckmark) 1.05f else 1f,
+                                    animationSpec = spring(dampingRatio = 0.4f, stiffness = 600f),
+                                    label = "set_btn_scale"
+                                )
                                 Button(
                                     onClick = { showWallpaperSheet = true },
-                                    modifier = Modifier.weight(1f).height(50.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(52.dp)
+                                        .scale(setButtonScale),
                                     enabled = wallpaperState !is WallpaperState.Applying && !showSetCheckmark,
-                                    shape = MaterialTheme.shapes.medium,
+                                    shape = RoundedCornerShape(26.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = if (showSetCheckmark)
-                                            MaterialTheme.colorScheme.primary.copy(green = 0.85f)
+                                            Color(0xFF2E7D32)
                                         else MaterialTheme.colorScheme.primary
                                     )
                                 ) {
-                                    val setButtonScale by animateFloatAsState(
-                                        targetValue = if (showSetCheckmark) 1.08f else 1f,
-                                        animationSpec = spring(dampingRatio = 0.4f, stiffness = 600f),
-                                        label = "set_btn_scale"
-                                    )
                                     AnimatedContent(
                                         targetState = when {
                                             wallpaperState is WallpaperState.Applying -> "applying"
                                             showSetCheckmark -> "done"
                                             else -> "idle"
                                         },
-                                        transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) },
-                                        label = "set_btn_content",
-                                        modifier = Modifier.scale(setButtonScale)
+                                        transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(150)) },
+                                        label = "set_btn_content"
                                     ) { target ->
                                         when (target) {
                                             "applying" -> CircularProgressIndicator(
@@ -608,13 +527,38 @@ fun DetailScreen(
                                                 Spacer(Modifier.width(8.dp))
                                                 Text(
                                                     text = stringResource(R.string.set_wallpaper),
-                                                    fontWeight = FontWeight.SemiBold
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
                                     }
                                 }
 
+                                Spacer(Modifier.width(8.dp))
+
+                                // Favorite Heart Button
+                                FilledIconButton(
+                                    onClick = viewModel::toggleFavorite,
+                                    modifier = Modifier.size(48.dp),
+                                    shape = CircleShape,
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = if (state.isFavorite)
+                                            Color(0xFFE91E63).copy(alpha = 0.35f)
+                                        else Color.White.copy(alpha = 0.15f)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = if (state.isFavorite) Icons.Outlined.Favorite
+                                        else Icons.Outlined.FavoriteBorder,
+                                        contentDescription = stringResource(R.string.favorite),
+                                        tint = if (state.isFavorite) Color(0xFFFF4081) else Color.White,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+
+                                Spacer(Modifier.width(6.dp))
+
+                                // Download Button
                                 val isDownloaded = downloadState is DownloadState.AlreadyDownloaded
                                 FilledIconButton(
                                     onClick = {
@@ -643,10 +587,11 @@ fun DetailScreen(
                                         }
                                     },
                                     enabled = downloadState !is DownloadState.InProgress,
-                                    modifier = Modifier.size(50.dp),
-                                    shape = MaterialTheme.shapes.medium,
+                                    modifier = Modifier.size(48.dp),
+                                    shape = CircleShape,
                                     colors = IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = if (isDownloaded) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                        containerColor = if (isDownloaded)
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
                                         else Color.White.copy(alpha = 0.15f)
                                     )
                                 ) {
@@ -681,31 +626,16 @@ fun DetailScreen(
                                     }
                                 }
 
-                                FilledIconButton(
-                                    onClick = viewModel::toggleFavorite,
-                                    modifier = Modifier.size(50.dp),
-                                    shape = MaterialTheme.shapes.medium,
-                                    colors = IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = if (state.isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                        else Color.White.copy(alpha = 0.15f)
-                                    )
-                                ) {
-                                    Icon(
-                                        imageVector = if (state.isFavorite) Icons.Outlined.Favorite
-                                        else Icons.Outlined.FavoriteBorder,
-                                        contentDescription = stringResource(R.string.favorite),
-                                        tint = if (state.isFavorite) MaterialTheme.colorScheme.primary else Color.White,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
+                                Spacer(Modifier.width(6.dp))
 
+                                // Share Button
                                 FilledIconButton(
                                     onClick = {
                                         val activity = context as? ComponentActivity ?: return@FilledIconButton
                                         viewModel.shareImage(activity)
                                     },
-                                    modifier = Modifier.size(50.dp),
-                                    shape = MaterialTheme.shapes.medium,
+                                    modifier = Modifier.size(48.dp),
+                                    shape = CircleShape,
                                     colors = IconButtonDefaults.filledIconButtonColors(
                                         containerColor = Color.White.copy(alpha = 0.15f)
                                     )
@@ -714,40 +644,14 @@ fun DetailScreen(
                                         Icons.Outlined.Share,
                                         contentDescription = stringResource(R.string.share),
                                         tint = Color.White,
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
-                            }
-
-                            Spacer(Modifier.height(10.dp))
-
-                            Button(
-                                onClick = {
-                                    val activity = context as? ComponentActivity ?: return@Button
-                                    viewModel.triggerRewardedSet(activity)
-                                },
-                                enabled = rewardedReady,
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                shape = MaterialTheme.shapes.medium,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                                    contentColor = MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                Icon(
-                                    Icons.Filled.Bolt,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    text = stringResource(R.string.rewarded_set_both),
-                                    fontWeight = FontWeight.SemiBold
-                                )
                             }
                         }
                     }
 
+                    // Lock/Home Screen Simulator Overlay
                     WallpaperPreviewOverlay(
                         mode = previewMode,
                         onSelectMode = { previewMode = it },
@@ -755,6 +659,7 @@ fun DetailScreen(
                     )
                 }
 
+                // Clean & Fast Apply Sheet (No blur, no darken!)
                 if (showWallpaperSheet) {
                     ModalBottomSheet(
                         onDismissRequest = { showWallpaperSheet = false },
@@ -763,11 +668,6 @@ fun DetailScreen(
                         dragHandle = { BottomSheetDefaults.DragHandle() }
                     ) {
                         WallpaperTargetSheet(
-                            blurRadius = blurRadius,
-                            dimPercent = dimPercent,
-                            onBlurChange = viewModel::setBlurRadius,
-                            onDimChange = viewModel::setDimPercent,
-                            onResetAdjustments = viewModel::resetAdjustments,
                             onSelect = { target ->
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     showWallpaperSheet = false
@@ -781,6 +681,29 @@ fun DetailScreen(
                     }
                 }
 
+                // Rich Photo Information & Similar Wallpapers Bottom Sheet
+                if (showInfoSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showInfoSheet = false },
+                        sheetState = infoSheetState,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        dragHandle = { BottomSheetDefaults.DragHandle() }
+                    ) {
+                        PhotoInfoSheet(
+                            photo = photo,
+                            similar = similar,
+                            onRelatedPhoto = { relatedId ->
+                                scope.launch { infoSheetState.hide() }.invokeOnCompletion {
+                                    showInfoSheet = false
+                                    onRelatedPhoto(relatedId)
+                                }
+                            },
+                            onClose = { showInfoSheet = false }
+                        )
+                    }
+                }
+
+                // In-App Rating Review Prompt Dialog
                 if (showReviewPrompt) {
                     AlertDialog(
                         onDismissRequest = viewModel::onDismissReview,
@@ -818,13 +741,12 @@ fun DetailScreen(
     }
 }
 
+/**
+ * Clean & Fast Target Selection Bottom Sheet.
+ * Direct, instant Home, Lock, or Both screens without any complex sliders.
+ */
 @Composable
 private fun WallpaperTargetSheet(
-    blurRadius: Int,
-    dimPercent: Float,
-    onBlurChange: (Int) -> Unit,
-    onDimChange: (Float) -> Unit,
-    onResetAdjustments: () -> Unit,
     onSelect: (WallpaperTarget) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -834,110 +756,57 @@ private fun WallpaperTargetSheet(
             .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.set_wallpaper_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            if (blurRadius > 0 || dimPercent > 0f) {
-                TextButton(onClick = onResetAdjustments) {
-                    Text(
-                        text = stringResource(R.string.reset_adjustments),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-
-        // Blur & Dim Adjustments Card
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.adjust_wallpaper),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            // Blur Slider
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = stringResource(R.string.blur_effect, blurRadius),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Slider(
-                value = blurRadius.toFloat(),
-                onValueChange = { onBlurChange(it.toInt()) },
-                valueRange = 0f..25f,
-                steps = 24,
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.primary
-                )
-            )
-
-            // Dim Slider
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                val dimPct = (dimPercent * 100).toInt()
-                Text(
-                    text = stringResource(R.string.dim_effect, dimPct),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Slider(
-                value = dimPercent,
-                onValueChange = onDimChange,
-                valueRange = 0f..0.60f,
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.primary
-                )
-            )
-        }
+        Text(
+            text = stringResource(R.string.set_wallpaper_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
 
         Spacer(Modifier.height(4.dp))
 
         WallpaperTarget.entries.forEach { target ->
             Button(
                 onClick = { onSelect(target) },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
+                    containerColor = when (target) {
+                        WallpaperTarget.BOTH -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    contentColor = when (target) {
+                        WallpaperTarget.BOTH -> Color.White
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
                 )
             ) {
-                Text(
-                    text = when (target) {
-                        WallpaperTarget.HOME -> stringResource(R.string.wallpaper_home)
-                        WallpaperTarget.LOCK -> stringResource(R.string.wallpaper_lock)
-                        WallpaperTarget.BOTH -> stringResource(R.string.wallpaper_both)
-                    },
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        imageVector = when (target) {
+                            WallpaperTarget.HOME -> Icons.Filled.Home
+                            WallpaperTarget.LOCK -> Icons.Filled.Lock
+                            WallpaperTarget.BOTH -> Icons.Filled.AutoAwesome
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = when (target) {
+                            WallpaperTarget.HOME -> stringResource(R.string.wallpaper_home)
+                            WallpaperTarget.LOCK -> stringResource(R.string.wallpaper_lock)
+                            WallpaperTarget.BOTH -> stringResource(R.string.wallpaper_both)
+                        },
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
+
         Spacer(Modifier.height(4.dp))
         TextButton(
             onClick = onDismiss,
@@ -946,6 +815,162 @@ private fun WallpaperTargetSheet(
             Text(stringResource(R.string.cancel))
         }
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+/**
+ * Rich Wallpaper Information Sheet with Photographer details,
+ * resolution metrics, color swatches, and similar wallpapers carousel.
+ */
+@Composable
+private fun PhotoInfoSheet(
+    photo: Photo,
+    similar: List<Photo>,
+    onRelatedPhoto: (String) -> Unit,
+    onClose: () -> Unit
+) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Photographer Header Card
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .clickable {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, photo.photographer.profileUrl.toUri())
+                        )
+                    }
+                }
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = photo.photographer.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "View profile on Pexels",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline
+                )
+            }
+            Icon(
+                imageVector = Icons.Outlined.OpenInNew,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        // Specs Row (Dimensions & Megapixels)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            val megapixels = (photo.width.toLong() * photo.height.toLong()) / 1_000_000f
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "${photo.width} × ${photo.height}",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.megapixels, megapixels),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // Dominant Color Swatches
+            val baseColor = remember(photo.color) {
+                runCatching { Color(photo.color.orEmpty().toColorInt()) }
+                    .getOrDefault(Color(0xFF6C63FF))
+            }
+            val swatches = remember(baseColor) {
+                listOf(
+                    baseColor.copy(red = (baseColor.red * 0.6f).coerceIn(0f, 1f),
+                        green = (baseColor.green * 0.6f).coerceIn(0f, 1f),
+                        blue = (baseColor.blue * 0.6f).coerceIn(0f, 1f)),
+                    baseColor,
+                    baseColor.copy(
+                        red = (baseColor.red + (1f - baseColor.red) * 0.5f),
+                        green = (baseColor.green + (1f - baseColor.green) * 0.5f),
+                        blue = (baseColor.blue + (1f - baseColor.blue) * 0.5f)
+                    )
+                )
+            }
+            swatches.forEach { swatch ->
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(swatch)
+                )
+            }
+        }
+
+        if (photo.description?.isNotBlank() == true) {
+            Text(
+                text = photo.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        // Similar Wallpapers Carousel
+        if (similar.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.similar_photos),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            LazyRow(
+                contentPadding = PaddingValues(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(similar, key = { it.id }) { related ->
+                    AsyncImage(
+                        model = related.thumbUrl,
+                        contentDescription = related.description,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .width(88.dp)
+                            .height(132.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                            .clickable { onRelatedPhoto(related.id) }
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
     }
 }
 

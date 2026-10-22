@@ -33,8 +33,7 @@ android {
             "\"${localProps.getProperty("PEXELS_API_KEY", "YOUR_KEY_HERE")}\""
         )
 
-        manifestPlaceholders["startAppId"] = "207408870"
-        buildConfigField("String", "START_APP_ID", "\"207408870\"")
+        buildConfigField("String", "UNITY_GAME_ID", "\"6211137\"")
 
     }
 
@@ -137,8 +136,8 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
-    // Start.io
-    implementation(libs.startapp)
+    // Unity Ads
+    implementation(libs.unity.ads)
 
     // DataStore
     implementation(libs.datastore.preferences)
