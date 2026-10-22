@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.remember
+import com.rank.quickwallpaper.ui.components.EmptyState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,7 +51,11 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.rank.quickwallpaper.R
-import com.rank.quickwallpaper.ui.components.EmptyState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Check
+import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import com.rank.quickwallpaper.ui.components.ErrorState
 import com.rank.quickwallpaper.ui.components.PhotoGridItem
 import com.rank.quickwallpaper.ui.components.ShimmerGrid
@@ -61,10 +68,32 @@ fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
+    val selectedColor by viewModel.selectedColor.collectAsStateWithLifecycle()
     val results = viewModel.results.collectAsLazyPagingItems()
     val keyboard = LocalSoftwareKeyboardController.current
 
-    Scaffold(modifier = modifier) { padding ->
+    val colorsList = remember {
+        listOf(
+            "red" to Color(0xFFE53935),
+            "orange" to Color(0xFFFB8C00),
+            "yellow" to Color(0xFFFDD835),
+            "green" to Color(0xFF43A047),
+            "turquoise" to Color(0xFF00ACC1),
+            "blue" to Color(0xFF1E88E5),
+            "violet" to Color(0xFF8E24AA),
+            "pink" to Color(0xFFD81B60),
+            "brown" to Color(0xFF6D4C41),
+            "black" to Color(0xFF212121),
+            "white" to Color(0xFFF5F5F5)
+        )
+    }
+
+    Scaffold(
+        modifier = modifier,
+        bottomBar = {
+            BannerAdSlot(modifier = Modifier.padding(vertical = 4.dp))
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -113,7 +142,48 @@ fun SearchScreen(
                 )
             )
 
-            if (query.isBlank()) {
+            // Horizontal Color Filter Chips
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(colorsList.size) { index ->
+                    val (colorName, colorVal) = colorsList[index]
+                    val isSelected = selectedColor == colorName
+                    Box(
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .clickable { viewModel.onColorSelected(colorName) }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .clip(CircleShape)
+                                    .background(colorVal)
+                            )
+                            Text(
+                                text = colorName.replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (query.isBlank() && selectedColor == null) {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.search_trending),
@@ -143,8 +213,8 @@ fun SearchScreen(
                             modifier = Modifier
                                 .clip(MaterialTheme.shapes.small)
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .clickable { viewModel.onQueryChange(queryText) }
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .clickable { viewModel.onQueryChange(queryText) }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 text = stringResource(labelRes),
@@ -157,7 +227,7 @@ fun SearchScreen(
             }
 
             when {
-                query.isBlank() -> {
+                query.isBlank() && selectedColor == null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center

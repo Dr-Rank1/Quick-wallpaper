@@ -42,9 +42,9 @@ class PhotoRepository @Inject constructor(
         pagingSourceFactory = { PhotoPagingSource(api, PexelsQuery.Editorial) }
     ).flow
 
-    fun searchPhotos(query: String): Flow<PagingData<Photo>> = Pager(
+    fun searchPhotos(query: String, color: String? = null): Flow<PagingData<Photo>> = Pager(
         config = feedConfig,
-        pagingSourceFactory = { PhotoPagingSource(api, PexelsQuery.Search(query)) }
+        pagingSourceFactory = { PhotoPagingSource(api, PexelsQuery.Search(query, color)) }
     ).flow
 
     fun getCategoryPhotos(query: String): Flow<PagingData<Photo>> = Pager(

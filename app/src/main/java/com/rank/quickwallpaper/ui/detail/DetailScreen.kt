@@ -44,6 +44,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Wallpaper
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -77,8 +78,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -126,6 +130,9 @@ fun DetailScreen(
     val downloadState by viewModel.downloadState.collectAsStateWithLifecycle()
     val rewardedReady by viewModel.rewardedReady.collectAsStateWithLifecycle()
     val similar by viewModel.similar.collectAsStateWithLifecycle()
+    val blurRadius by viewModel.blurRadius.collectAsStateWithLifecycle()
+    val dimPercent by viewModel.dimPercent.collectAsStateWithLifecycle()
+    val showReviewPrompt by viewModel.showReviewPrompt.collectAsStateWithLifecycle()
     val snackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showWallpaperSheet by remember { mutableStateOf(false) }
@@ -340,7 +347,16 @@ fun DetailScreen(
                                     }
                                 )
                             }
+                            .blur(if (blurRadius > 0) blurRadius.dp else 0.dp)
                     )
+
+                    if (dimPercent > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = dimPercent))
+                        )
+                    }
 
                     Row(
                         modifier = Modifier
@@ -354,7 +370,11 @@ fun DetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = {
+                            val activity = context as? ComponentActivity
+                            activity?.let { viewModel.maybeShowInterstitial(it) }
+                            onBack()
+                        }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = stringResource(R.string.back),
@@ -743,15 +763,55 @@ fun DetailScreen(
                         dragHandle = { BottomSheetDefaults.DragHandle() }
                     ) {
                         WallpaperTargetSheet(
+                            blurRadius = blurRadius,
+                            dimPercent = dimPercent,
+                            onBlurChange = viewModel::setBlurRadius,
+                            onDimChange = viewModel::setDimPercent,
+                            onResetAdjustments = viewModel::resetAdjustments,
                             onSelect = { target ->
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     showWallpaperSheet = false
                                     viewModel.applyWallpaper(target)
+                                    val activity = context as? ComponentActivity
+                                    activity?.let { viewModel.maybeShowInterstitial(it) }
                                 }
                             },
                             onDismiss = { showWallpaperSheet = false }
                         )
                     }
+                }
+
+                if (showReviewPrompt) {
+                    AlertDialog(
+                        onDismissRequest = viewModel::onDismissReview,
+                        title = {
+                            Text(
+                                text = stringResource(R.string.rate_app_title),
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = stringResource(R.string.rate_app_desc),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { viewModel.onRateApp(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text(stringResource(R.string.rate_now))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = viewModel::onDismissReview) {
+                                Text(stringResource(R.string.rate_later))
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -760,29 +820,112 @@ fun DetailScreen(
 
 @Composable
 private fun WallpaperTargetSheet(
+    blurRadius: Int,
+    dimPercent: Float,
+    onBlurChange: (Int) -> Unit,
+    onDimChange: (Float) -> Unit,
+    onResetAdjustments: () -> Unit,
     onSelect: (WallpaperTarget) -> Unit,
     onDismiss: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(
-            text = stringResource(R.string.set_wallpaper_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.set_wallpaper_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            if (blurRadius > 0 || dimPercent > 0f) {
+                TextButton(onClick = onResetAdjustments) {
+                    Text(
+                        text = stringResource(R.string.reset_adjustments),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        // Blur & Dim Adjustments Card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.adjust_wallpaper),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            // Blur Slider
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(R.string.blur_effect, blurRadius),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Slider(
+                value = blurRadius.toFloat(),
+                onValueChange = { onBlurChange(it.toInt()) },
+                valueRange = 0f..25f,
+                steps = 24,
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary
+                )
+            )
+
+            // Dim Slider
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                val dimPct = (dimPercent * 100).toInt()
+                Text(
+                    text = stringResource(R.string.dim_effect, dimPct),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Slider(
+                value = dimPercent,
+                onValueChange = onDimChange,
+                valueRange = 0f..0.60f,
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary
+                )
+            )
+        }
+
+        Spacer(Modifier.height(4.dp))
+
         WallpaperTarget.entries.forEach { target ->
             Button(
                 onClick = { onSelect(target) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
                 )
             ) {
                 Text(
@@ -791,7 +934,7 @@ private fun WallpaperTargetSheet(
                         WallpaperTarget.LOCK -> stringResource(R.string.wallpaper_lock)
                         WallpaperTarget.BOTH -> stringResource(R.string.wallpaper_both)
                     },
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

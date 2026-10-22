@@ -48,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import androidx.paging.compose.itemKey
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Category
@@ -95,6 +96,9 @@ fun CategoriesScreen(
     }
 
     Scaffold(
+        bottomBar = {
+            BannerAdSlot(modifier = Modifier.padding(vertical = 4.dp))
+        },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.nav_categories)) },

@@ -20,7 +20,8 @@ interface PexelsApi {
     suspend fun searchPhotos(
         @Query("query") query: String,
         @Query("page") page: Int = 1,
-        @Query("per_page") perPage: Int = 30
+        @Query("per_page") perPage: Int = 30,
+        @Query("color") color: String? = null
     ): PhotoListResponseDto
 
     @GET("v1/photos/{id}")

@@ -159,6 +159,16 @@
     <!-- Detail screen additions -->
     <string name="megapixels">%1$.1f MP</string>
     <string name="color_palette">Color palette</string>
+    <string name="adjust_wallpaper">Adjust &amp; Effects</string>
+    <string name="blur_effect">Blur: %1$d dp</string>
+    <string name="dim_effect">Darken: %1$d%%</string>
+    <string name="reset_adjustments">Reset</string>
+    <string name="colors_filter">Filter by Color</string>
+    <string name="tile_shuffle_label">Shuffle Wallpaper</string>
+    <string name="rate_app_title">Enjoying Pazia?</string>
+    <string name="rate_app_desc">Help us make Pazia even better by leaving a quick rating on Google Play!</string>
+    <string name="rate_now">Rate 5 Stars ★</string>
+    <string name="rate_later">Maybe Later</string>
 
     <!-- Wallpaper Preview Simulator -->
     <string name="preview_wallpaper">Preview</string>

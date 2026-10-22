@@ -160,6 +160,16 @@
     <!-- Detail screen additions -->
     <string name="megapixels">%1$.1f MP</string>
     <string name="color_palette">Rangi kuu</string>
+    <string name="adjust_wallpaper">Rekebisha &amp; Athari</string>
+    <string name="blur_effect">Ukungu: %1$d dp</string>
+    <string name="dim_effect">Punguza mwangaza: %1$d%%</string>
+    <string name="reset_adjustments">Weka upya</string>
+    <string name="colors_filter">Chuja kwa Rangi</string>
+    <string name="tile_shuffle_label">Changanya Picha</string>
+    <string name="rate_app_title">Unafurahia Pazia?</string>
+    <string name="rate_app_desc">Tusaidie kuboresha Pazia kwa kutoa tathmini kwenye Google Play!</string>
+    <string name="rate_now">Toa Nyota 5 ★</string>
+    <string name="rate_later">Baadaye</string>
 
     <!-- Wallpaper Preview Simulator -->
     <string name="preview_wallpaper">Onyesho la Awali</string>

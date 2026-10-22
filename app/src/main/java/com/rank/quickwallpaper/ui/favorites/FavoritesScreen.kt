@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.data.local.entities.FavoriteEntity
 
@@ -59,6 +60,11 @@ fun FavoritesScreen(
     val favorites by viewModel.favorites.collectAsStateWithLifecycle()
 
     Scaffold(
+        bottomBar = {
+            if (favorites.isNotEmpty()) {
+                BannerAdSlot(modifier = Modifier.padding(vertical = 4.dp))
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {

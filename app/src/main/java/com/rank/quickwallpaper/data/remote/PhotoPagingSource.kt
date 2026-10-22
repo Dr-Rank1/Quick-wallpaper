@@ -9,7 +9,7 @@ import java.io.IOException
 
 sealed class PexelsQuery {
     object Editorial : PexelsQuery()
-    data class Search(val query: String) : PexelsQuery()
+    data class Search(val query: String, val color: String? = null) : PexelsQuery()
     data class Collection(val id: String) : PexelsQuery()
 }
 
@@ -27,7 +27,7 @@ class PhotoPagingSource(
                     r.photos.map { it.toDomain() } to (r.nextPage != null)
                 }
                 is PexelsQuery.Search -> {
-                    val r = api.searchPhotos(query.query, page, params.loadSize)
+                    val r = api.searchPhotos(query.query, page, params.loadSize, query.color)
                     r.photos.map { it.toDomain() } to (r.nextPage != null)
                 }
                 is PexelsQuery.Collection -> {

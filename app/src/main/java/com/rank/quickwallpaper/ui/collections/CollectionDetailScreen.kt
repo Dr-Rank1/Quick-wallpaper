@@ -27,6 +27,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.rank.quickwallpaper.R
+import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import com.rank.quickwallpaper.ui.components.ErrorState
 import com.rank.quickwallpaper.ui.components.PhotoGridItem
 import com.rank.quickwallpaper.ui.components.ShimmerGrid
@@ -42,6 +43,9 @@ fun CollectionDetailScreen(
     val photos = viewModel.photos.collectAsLazyPagingItems()
 
     Scaffold(
+        bottomBar = {
+            BannerAdSlot(modifier = Modifier.padding(vertical = 4.dp))
+        },
         topBar = {
             TopAppBar(
                 title = {
