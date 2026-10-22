@@ -31,20 +31,32 @@ class SearchViewModel @Inject constructor(
     private val _selectedColor = MutableStateFlow<String?>(null)
     val selectedColor: StateFlow<String?> = _selectedColor
 
-    val results: Flow<PagingData<Photo>> = combine(_query, _selectedColor) { q, c -> q to c }
-        .debounce(400)
+    // Only text typing needs debounce so we don't spam while user is typing
+    private val debouncedText = _query
+        .debounce(250)
+        .distinctUntilChanged()
+
+    // Color taps trigger IMMEDIATELY with 0ms debounce
+    val results: Flow<PagingData<Photo>> = combine(debouncedText, _selectedColor) { q, c -> q to c }
         .distinctUntilChanged()
         .filter { (q, c) -> q.isNotBlank() || c != null }
         .flatMapLatest { (q, c) ->
-            val effectiveQuery = q.ifBlank { "wallpaper" }
+            val effectiveQuery = when {
+                q.isNotBlank() -> q
+                c != null -> c
+                else -> "wallpaper"
+            }
             repository.searchPhotos(effectiveQuery, c)
         }
         .cachedIn(viewModelScope)
 
-    fun onQueryChange(q: String) { _query.value = q }
+    fun onQueryChange(q: String) {
+        _query.value = q
+    }
 
     fun onColorSelected(color: String?) {
-        _selectedColor.value = if (_selectedColor.value == color) null else color
+        val next = if (_selectedColor.value == color) null else color
+        _selectedColor.value = next
     }
 
     fun clearQuery() {
@@ -52,4 +64,3 @@ class SearchViewModel @Inject constructor(
         _selectedColor.value = null
     }
 }
-

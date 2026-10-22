@@ -100,12 +100,6 @@ class DetailViewModel @Inject constructor(
     private val _similar = MutableStateFlow<List<Photo>>(emptyList())
     val similar: StateFlow<List<Photo>> = _similar
 
-    private val _blurRadius = MutableStateFlow(0)
-    val blurRadius: StateFlow<Int> = _blurRadius
-
-    private val _dimPercent = MutableStateFlow(0f)
-    val dimPercent: StateFlow<Float> = _dimPercent
-
     private val _showReviewPrompt = MutableStateFlow(false)
     val showReviewPrompt: StateFlow<Boolean> = _showReviewPrompt
 
@@ -121,19 +115,6 @@ class DetailViewModel @Inject constructor(
             _showReviewPrompt.value = false
             reviewManager.dismissForNow()
         }
-    }
-
-    fun setBlurRadius(radius: Int) {
-        _blurRadius.value = radius.coerceIn(0, 25)
-    }
-
-    fun setDimPercent(dim: Float) {
-        _dimPercent.value = dim.coerceIn(0f, 0.6f)
-    }
-
-    fun resetAdjustments() {
-        _blurRadius.value = 0
-        _dimPercent.value = 0f
     }
 
     val downloadQuality: StateFlow<DownloadQuality> = dataStore.data.map { prefs ->
@@ -314,9 +295,7 @@ class DetailViewModel @Inject constructor(
                 imageUrl = state.photo.fullUrl,
                 target = target,
                 fit = wallpaperFit.value,
-                localPath = local,
-                blurRadius = _blurRadius.value,
-                dimPercent = _dimPercent.value
+                localPath = local
             )
                 .onSuccess {
                     _wallpaperState.value = WallpaperState.Success

@@ -11,9 +11,8 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
-import com.rank.quickwallpaper.ads.StartAppConfig
+import com.rank.quickwallpaper.ads.UnityAdsManager
 import com.rank.quickwallpaper.service.WallpaperNotificationHelper
-import com.startapp.sdk.adsbase.StartAppSDK
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 import okio.Path.Companion.toOkioPath
@@ -24,6 +23,7 @@ class PaziaApplication : Application(), Configuration.Provider {
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var okHttpClient: OkHttpClient
+    @Inject lateinit var unityAdsManager: UnityAdsManager
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -34,14 +34,7 @@ class PaziaApplication : Application(), Configuration.Provider {
         super.onCreate()
         WallpaperNotificationHelper.createChannels(this)
         setupCoil()
-        initStartApp()
-    }
-
-    private fun initStartApp() {
-        if (BuildConfig.DEBUG) StartAppSDK.setTestAdsEnabled(true)
-        StartAppSDK.initParams(this, StartAppConfig.APP_ID)
-            .setCallback { }
-            .init()
+        unityAdsManager.initialize(testMode = false)
     }
 
     private fun setupCoil() {

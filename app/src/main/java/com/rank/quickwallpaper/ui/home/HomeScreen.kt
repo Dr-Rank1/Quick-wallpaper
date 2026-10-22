@@ -58,7 +58,6 @@ import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Photo
 import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import com.rank.quickwallpaper.ui.components.ErrorState
-import com.rank.quickwallpaper.ui.components.NativeAdSlot
 import com.rank.quickwallpaper.ui.components.PhotoGridItem
 import com.rank.quickwallpaper.ui.components.ShimmerGrid
 
@@ -176,7 +175,7 @@ fun HomeScreen(
                                         }
                                     ) { position ->
                                         if (!adsRemoved && isAdSlot(position)) {
-                                            NativeAdSlot(Modifier.padding(vertical = 4.dp))
+                                            BannerAdSlot(Modifier.padding(vertical = 4.dp))
                                         } else {
                                             val idx = if (adsRemoved) position else photoIndex(position)
                                             val photo = photos[idx] ?: return@items

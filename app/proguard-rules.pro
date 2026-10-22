@@ -28,14 +28,15 @@
 # Coil
 -dontwarn coil.**
 
-# Start.io
--keep class com.startapp.** { *; }
--keep class com.truenet.** { *; }
--keepattributes Exceptions, InnerClasses, Signature, Deprecated, SourceFile,
-LineNumberTable, *Annotation*, EnclosingMethod
--dontwarn android.webkit.JavascriptInterface
--dontwarn com.startapp.**
--dontwarn org.jetbrains.annotations.**
+# Unity Ads
+-keepattributes SourceFile, LineNumberTable
+-keepattributes JavascriptInterface
+-keep class com.unity3d.ads.** { *; }
+-keep interface com.unity3d.ads.** { *; }
+-keep class com.unity3d.services.** { *; }
+-keep interface com.unity3d.services.** { *; }
+-dontwarn com.unity3d.ads.**
+-dontwarn com.unity3d.services.**
 
 # Enum classes (used in when expressions)
 -keepclassmembers enum * { *; }
