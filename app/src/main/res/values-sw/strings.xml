@@ -146,6 +146,21 @@
     <string name="clear_history_desc">Ondoa picha zilizotazamwa hivi karibuni</string>
     <string name="history_cleared">Historia ya kutazama imefutwa</string>
 
+    <!-- Notifications -->
+    <string name="notif_channel_wallpaper_set">Picha ya Ukuta Imewekwa</string>
+    <string name="notif_channel_wallpaper_set_desc">Inakujulisha wakati picha ya ukuta imewekwa kwa ufanisi</string>
+    <string name="notif_channel_auto_wallpaper">Picha ya Ukuta Kiotomatiki</string>
+    <string name="notif_channel_auto_wallpaper_desc">Masasisho ya mzunguko wa picha ya ukuta chinichini</string>
+    <string name="notif_wallpaper_set_home">🖼 Skrini ya Nyumbani Imesasishwa</string>
+    <string name="notif_wallpaper_set_lock">🔒 Skrini ya Kufunga Imesasishwa</string>
+    <string name="notif_wallpaper_set_both">✨ Picha Imewekwa kwenye Skrini Zote</string>
+    <string name="notif_wallpaper_set_body">Picha na %1$s · Gusa ili kutazama zaidi</string>
+    <string name="notif_wallpaper_set_body_generic">Picha yako mpya ya ukuta imewekwa. Gusa ili kutazama zaidi.</string>
+
+    <!-- Detail screen additions -->
+    <string name="megapixels">%1$.1f MP</string>
+    <string name="color_palette">Rangi kuu</string>
+
     <!-- Wallpaper Preview Simulator -->
     <string name="preview_wallpaper">Onyesho la Awali</string>
     <string name="preview_lock_screen">Skrini ya Kufunga</string>

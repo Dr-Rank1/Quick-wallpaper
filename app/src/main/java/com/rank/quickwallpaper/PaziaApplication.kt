@@ -12,6 +12,7 @@ import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import com.rank.quickwallpaper.ads.StartAppConfig
+import com.rank.quickwallpaper.service.WallpaperNotificationHelper
 import com.startapp.sdk.adsbase.StartAppSDK
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
@@ -31,6 +32,7 @@ class PaziaApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        WallpaperNotificationHelper.createChannels(this)
         setupCoil()
         initStartApp()
     }
