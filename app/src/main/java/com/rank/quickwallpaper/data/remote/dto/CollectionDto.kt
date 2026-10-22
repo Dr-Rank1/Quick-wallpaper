@@ -8,7 +8,7 @@ data class CollectionDto(
     @Json(name = "id") val id: String,
     @Json(name = "title") val title: String,
     @Json(name = "description") val description: String?,
-    @Json(name = "private") val private: Boolean,
+    @Json(name = "private") val isPrivate: Boolean = false,
     @Json(name = "media_count") val mediaCount: Int,
     @Json(name = "photos_count") val photosCount: Int
 )

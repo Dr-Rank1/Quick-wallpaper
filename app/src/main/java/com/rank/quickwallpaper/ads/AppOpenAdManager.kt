@@ -14,8 +14,8 @@ import javax.inject.Singleton
 class AppOpenAdManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private var appOpenAd: StartAppAd? = null
-    private var shownThisSession = false
+    @Volatile private var appOpenAd: StartAppAd? = null
+    @Volatile private var shownThisSession = false
 
     fun load() {
         if (appOpenAd != null) return

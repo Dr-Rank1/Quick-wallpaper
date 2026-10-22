@@ -8,6 +8,7 @@ data class Category(
 )
 
 val ALL_CATEGORIES = listOf(
+    Category("amoled",       "AMOLED",        "amoled pure black wallpaper", "🌑"),
     Category("nature",       "Nature",        "nature",        "🌿"),
     Category("architecture", "Architecture",  "architecture",  "🏛️"),
     Category("abstract",     "Abstract",      "abstract",      "🎨"),

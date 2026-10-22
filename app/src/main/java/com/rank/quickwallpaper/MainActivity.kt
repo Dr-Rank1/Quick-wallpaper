@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
             val settingsVm: SettingsViewModel = hiltViewModel()
             val settings by settingsVm.settings.collectAsStateWithLifecycle()
 
-            LaunchedEffect(settings.adsRemoved, onboardingDone) {
+            LaunchedEffect(onboardingDone) {
                 if (onboardingDone) {
                     appOpenAdManager.maybeShow(this@MainActivity, settings.adsRemoved)
                 }

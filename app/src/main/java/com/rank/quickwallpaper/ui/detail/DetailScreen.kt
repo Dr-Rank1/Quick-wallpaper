@@ -6,8 +6,11 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,11 +34,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -106,8 +111,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun DetailScreen(
     onBack: () -> Unit,
-    onRelatedPhoto: (String) -> Unit = {},
     modifier: Modifier = Modifier,
+    onRelatedPhoto: (String) -> Unit = {},
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -160,6 +165,7 @@ fun DetailScreen(
             is DownloadState.Success -> {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 showCheckmark = true
+                viewModel.acknowledgeSuccess()
                 scope.launch {
                     val result = snackbarHost.showSnackbar(
                         message = downloadSuccessMsg,
@@ -172,7 +178,6 @@ fun DetailScreen(
                 }
                 delay(2_000)
                 showCheckmark = false
-                viewModel.acknowledgeSuccess()
             }
             DownloadState.Failed -> {
                 val result = snackbarHost.showSnackbar(
@@ -214,6 +219,7 @@ fun DetailScreen(
             }
             is DetailUiState.Success -> {
                 val photo = state.photo
+                var previewMode by remember { mutableStateOf(PreviewMode.NONE) }
                 var heroReady by remember { mutableStateOf(false) }
                 val heroAlpha by animateFloatAsState(
                     targetValue = if (heroReady) 1f else 0f,
@@ -251,7 +257,7 @@ fun DetailScreen(
                         }
                         if (sensor != null) {
                             sensorManager.registerListener(
-                                listener, sensor, android.hardware.SensorManager.SENSOR_DELAY_GAME
+                                listener, sensor, android.hardware.SensorManager.SENSOR_DELAY_UI
                             )
                         }
                         onDispose { sensorManager.unregisterListener(listener) }
@@ -309,7 +315,7 @@ fun DetailScreen(
                             }
                     )
 
-                    Box(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
@@ -317,7 +323,9 @@ fun DetailScreen(
                                     listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent)
                                 )
                             )
-                            .padding(top = 8.dp)
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = onBack) {
                             Icon(
@@ -326,258 +334,283 @@ fun DetailScreen(
                                 tint = Color.White
                             )
                         }
+
+                        IconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                previewMode = if (previewMode == PreviewMode.NONE) PreviewMode.LOCK_SCREEN else PreviewMode.NONE
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (previewMode != PreviewMode.NONE) Icons.Filled.VisibilityOff else Icons.Outlined.Visibility,
+                                contentDescription = stringResource(R.string.preview_wallpaper),
+                                tint = if (previewMode != PreviewMode.NONE) MaterialTheme.colorScheme.primary else Color.White
+                            )
+                        }
                     }
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
-                                )
-                            )
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .padding(
-                                start = 20.dp,
-                                end = 20.dp,
-                                top = 40.dp,
-                                bottom = 16.dp
-                            )
+                    AnimatedVisibility(
+                        visible = previewMode == PreviewMode.NONE,
+                        enter = fadeIn() + slideInVertically { it },
+                        exit = fadeOut() + slideOutVertically { it },
+                        modifier = Modifier.align(Alignment.BottomCenter)
                     ) {
-                        TextButton(
-                            onClick = {
-                                runCatching {
-                                    context.startActivity(
-                                        Intent(
-                                            Intent.ACTION_VIEW,
-                                            photo.photographer.profileUrl.toUri()
-                                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
                                     )
-                                }
-                            },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.photo_by, photo.photographer.name),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White.copy(alpha = 0.85f),
-                                textDecoration = TextDecoration.Underline,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-
-                        Spacer(Modifier.height(4.dp))
-
-                        Text(
-                            text = buildString {
-                                append("${photo.width} × ${photo.height}")
-                                photo.description?.takeIf { it.isNotBlank() }?.let {
-                                    append("  ·  ")
-                                    append(it.take(60))
-                                }
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.55f),
-                            maxLines = 2
-                        )
-
-                        Spacer(Modifier.height(12.dp))
-
-                        if (similar.isNotEmpty()) {
-                            Text(
-                                text = stringResource(R.string.similar_photos),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = Color.White.copy(alpha = 0.85f),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                similar.take(4).forEach { related ->
-                                    AsyncImage(
-                                        model = related.thumbUrl,
-                                        contentDescription = related.description,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(64.dp)
-                                            .clip(MaterialTheme.shapes.small)
-                                            .clickable { onRelatedPhoto(related.id) }
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.height(12.dp))
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Button(
-                                onClick = { showWallpaperSheet = true },
-                                modifier = Modifier.weight(1f).height(50.dp),
-                                enabled = wallpaperState !is WallpaperState.Applying,
-                                shape = MaterialTheme.shapes.medium,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
                                 )
-                            ) {
-                                if (wallpaperState is WallpaperState.Applying) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(18.dp),
-                                        strokeWidth = 2.dp,
-                                        color = Color.White
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Outlined.Wallpaper,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        text = stringResource(R.string.set_wallpaper),
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-
-                            val isDownloaded = downloadState is DownloadState.AlreadyDownloaded
-                            FilledIconButton(
+                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                .padding(
+                                    start = 20.dp,
+                                    end = 20.dp,
+                                    top = 40.dp,
+                                    bottom = 16.dp
+                                )
+                        ) {
+                            TextButton(
                                 onClick = {
-                                    when (downloadState) {
-                                        DownloadState.InProgress -> {}
-                                        DownloadState.AlreadyDownloaded -> {
-                                            scope.launch {
-                                                val uri = viewModel.findDownloadedUri()
-                                                val result = snackbarHost.showSnackbar(
-                                                    message = alreadyDownloadedMsg,
-                                                    actionLabel = if (uri != null) actionOpenLabel else null,
-                                                    duration = SnackbarDuration.Short
-                                                )
-                                                if (result == SnackbarResult.ActionPerformed && uri != null) {
-                                                    openSavedImage(context, uri)
-                                                }
-                                            }
-                                        }
-                                        else -> {
-                                            if (notifPermission != null && !notifPermission.status.isGranted) {
-                                                notifPermission.launchPermissionRequest()
-                                            }
-                                            val activity = context as? ComponentActivity ?: return@FilledIconButton
-                                            viewModel.triggerDownload(activity, photo)
-                                        }
+                                    runCatching {
+                                        context.startActivity(
+                                            Intent(
+                                                Intent.ACTION_VIEW,
+                                                photo.photographer.profileUrl.toUri()
+                                            )
+                                        )
                                     }
                                 },
-                                enabled = downloadState !is DownloadState.InProgress,
-                                modifier = Modifier.size(50.dp),
-                                shape = MaterialTheme.shapes.medium,
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = if (isDownloaded) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                    else Color.White.copy(alpha = 0.15f)
-                                )
+                                contentPadding = PaddingValues(0.dp)
                             ) {
-                                AnimatedContent(
-                                    targetState = when {
-                                        downloadState is DownloadState.InProgress -> "progress"
-                                        showCheckmark || isDownloaded -> "check"
-                                        else -> "download"
-                                    },
-                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                    label = "download_icon"
-                                ) { target ->
-                                    when (target) {
-                                        "progress" -> CircularProgressIndicator(
+                                Text(
+                                    text = stringResource(R.string.photo_by, photo.photographer.name),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    textDecoration = TextDecoration.Underline,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Spacer(Modifier.height(4.dp))
+
+                            Text(
+                                text = buildString {
+                                    append("${photo.width} × ${photo.height}")
+                                    photo.description?.takeIf { it.isNotBlank() }?.let {
+                                        append("  ·  ")
+                                        append(it.take(60))
+                                    }
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.55f),
+                                maxLines = 2
+                            )
+
+                            Spacer(Modifier.height(12.dp))
+
+                            if (similar.isNotEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.similar_photos),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    similar.take(4).forEach { related ->
+                                        AsyncImage(
+                                            model = related.thumbUrl,
+                                            contentDescription = related.description,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(64.dp)
+                                                .clip(MaterialTheme.shapes.small)
+                                                .clickable { onRelatedPhoto(related.id) }
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(12.dp))
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Button(
+                                    onClick = { showWallpaperSheet = true },
+                                    modifier = Modifier.weight(1f).height(50.dp),
+                                    enabled = wallpaperState !is WallpaperState.Applying,
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    if (wallpaperState is WallpaperState.Applying) {
+                                        CircularProgressIndicator(
                                             modifier = Modifier.size(18.dp),
                                             strokeWidth = 2.dp,
                                             color = Color.White
                                         )
-                                        "check" -> Icon(
-                                            Icons.Outlined.CheckCircle,
+                                    } else {
+                                        Icon(
+                                            Icons.Outlined.Wallpaper,
                                             contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(22.dp)
+                                            modifier = Modifier.size(18.dp)
                                         )
-                                        else -> Icon(
-                                            Icons.Outlined.Download,
-                                            contentDescription = stringResource(R.string.download),
-                                            tint = Color.White,
-                                            modifier = Modifier.size(22.dp)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.set_wallpaper),
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                     }
                                 }
+
+                                val isDownloaded = downloadState is DownloadState.AlreadyDownloaded
+                                FilledIconButton(
+                                    onClick = {
+                                        when (downloadState) {
+                                            DownloadState.InProgress -> {}
+                                            DownloadState.AlreadyDownloaded -> {
+                                                scope.launch {
+                                                    val uri = viewModel.findDownloadedUri()
+                                                    val result = snackbarHost.showSnackbar(
+                                                        message = alreadyDownloadedMsg,
+                                                        actionLabel = if (uri != null) actionOpenLabel else null,
+                                                        duration = SnackbarDuration.Short
+                                                    )
+                                                    if (result == SnackbarResult.ActionPerformed && uri != null) {
+                                                        openSavedImage(context, uri)
+                                                    }
+                                                }
+                                            }
+                                            else -> {
+                                                if (notifPermission != null && !notifPermission.status.isGranted) {
+                                                    notifPermission.launchPermissionRequest()
+                                                }
+                                                val activity = context as? ComponentActivity ?: return@FilledIconButton
+                                                viewModel.triggerDownload(activity, photo)
+                                            }
+                                        }
+                                    },
+                                    enabled = downloadState !is DownloadState.InProgress,
+                                    modifier = Modifier.size(50.dp),
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = if (isDownloaded) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                        else Color.White.copy(alpha = 0.15f)
+                                    )
+                                ) {
+                                    AnimatedContent(
+                                        targetState = when {
+                                            downloadState is DownloadState.InProgress -> "progress"
+                                            showCheckmark || isDownloaded -> "check"
+                                            else -> "download"
+                                        },
+                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                        label = "download_icon"
+                                    ) { target ->
+                                        when (target) {
+                                            "progress" -> CircularProgressIndicator(
+                                                modifier = Modifier.size(18.dp),
+                                                strokeWidth = 2.dp,
+                                                color = Color.White
+                                            )
+                                            "check" -> Icon(
+                                                Icons.Outlined.CheckCircle,
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            else -> Icon(
+                                                Icons.Outlined.Download,
+                                                contentDescription = stringResource(R.string.download),
+                                                tint = Color.White,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                FilledIconButton(
+                                    onClick = viewModel::toggleFavorite,
+                                    modifier = Modifier.size(50.dp),
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = if (state.isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                        else Color.White.copy(alpha = 0.15f)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = if (state.isFavorite) Icons.Outlined.Favorite
+                                        else Icons.Outlined.FavoriteBorder,
+                                        contentDescription = stringResource(R.string.favorite),
+                                        tint = if (state.isFavorite) MaterialTheme.colorScheme.primary else Color.White,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+
+                                FilledIconButton(
+                                    onClick = {
+                                        val activity = context as? ComponentActivity ?: return@FilledIconButton
+                                        viewModel.shareImage(activity)
+                                    },
+                                    modifier = Modifier.size(50.dp),
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = Color.White.copy(alpha = 0.15f)
+                                    )
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Share,
+                                        contentDescription = stringResource(R.string.share),
+                                        tint = Color.White,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
                             }
 
-                            FilledIconButton(
-                                onClick = viewModel::toggleFavorite,
-                                modifier = Modifier.size(50.dp),
-                                shape = MaterialTheme.shapes.medium,
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = if (state.isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                    else Color.White.copy(alpha = 0.15f)
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = if (state.isFavorite) Icons.Outlined.Favorite
-                                    else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = stringResource(R.string.favorite),
-                                    tint = if (state.isFavorite) MaterialTheme.colorScheme.primary else Color.White,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
+                            Spacer(Modifier.height(10.dp))
 
-                            FilledIconButton(
+                            Button(
                                 onClick = {
-                                    val activity = context as? ComponentActivity ?: return@FilledIconButton
-                                    viewModel.shareImage(activity)
+                                    val activity = context as? ComponentActivity ?: return@Button
+                                    viewModel.triggerRewardedSet(activity)
                                 },
-                                modifier = Modifier.size(50.dp),
+                                enabled = rewardedReady,
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
                                 shape = MaterialTheme.shapes.medium,
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = Color.White.copy(alpha = 0.15f)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                                    contentColor = MaterialTheme.colorScheme.primary
                                 )
                             ) {
                                 Icon(
-                                    Icons.Outlined.Share,
-                                    contentDescription = stringResource(R.string.share),
-                                    tint = Color.White,
-                                    modifier = Modifier.size(22.dp)
+                                    Icons.Filled.Bolt,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.rewarded_set_both),
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
-                        }
-
-                        Spacer(Modifier.height(10.dp))
-
-                        Button(
-                            onClick = {
-                                val activity = context as? ComponentActivity ?: return@Button
-                                viewModel.triggerRewardedSet(activity)
-                            },
-                            enabled = rewardedReady,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = MaterialTheme.shapes.medium,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                                contentColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Icon(
-                                Icons.Filled.Bolt,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.rewarded_set_both),
-                                fontWeight = FontWeight.SemiBold
-                            )
                         }
                     }
+
+                    WallpaperPreviewOverlay(
+                        mode = previewMode,
+                        onSelectMode = { previewMode = it },
+                        onDismiss = { previewMode = PreviewMode.NONE }
+                    )
                 }
 
                 if (showWallpaperSheet) {

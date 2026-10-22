@@ -83,7 +83,7 @@ class DetailViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
-    private val photoId: String = checkNotNull(savedStateHandle["photoId"])
+    private val photoId: String = savedStateHandle["photoId"] ?: ""
 
     private val _uiState = MutableStateFlow<DetailUiState>(DetailUiState.Loading)
     val uiState: StateFlow<DetailUiState> = _uiState
@@ -115,6 +115,7 @@ class DetailViewModel @Inject constructor(
 
     private var currentDownloadId: Long? = null
     private var loadJob: Job? = null
+    private var favoriteJob: Job? = null
 
     val rewardedReady: StateFlow<Boolean> = rewardedAdManager.ready
 
@@ -130,6 +131,7 @@ class DetailViewModel @Inject constructor(
     }
 
     private fun checkIfAlreadyDownloaded() {
+        if (photoId.isBlank()) return
         viewModelScope.launch {
             val ids = dataStore.data.map { it[KEY_DOWNLOADED_IDS] ?: emptySet() }.first()
             if (photoId in ids) _downloadState.value = DownloadState.AlreadyDownloaded
@@ -139,7 +141,8 @@ class DetailViewModel @Inject constructor(
     private fun observeDownloadCompletion() {
         viewModelScope.launch {
             DownloadEventBus.events.collect { completedId ->
-                if (completedId != currentDownloadId) return@collect
+                val targetId = currentDownloadId ?: return@collect
+                if (completedId != targetId) return@collect
                 when (val status = wallpaperDownloader.queryStatus(completedId)) {
                     is DownloadStatus.Success -> {
                         persistDownloaded()
@@ -153,6 +156,7 @@ class DetailViewModel @Inject constructor(
     }
 
     private fun persistDownloaded() {
+        if (photoId.isBlank()) return
         viewModelScope.launch {
             dataStore.edit { prefs ->
                 prefs[KEY_DOWNLOADED_IDS] = (prefs[KEY_DOWNLOADED_IDS] ?: emptySet()) + photoId
@@ -161,20 +165,26 @@ class DetailViewModel @Inject constructor(
     }
 
     private fun loadPhoto() {
+        if (photoId.isBlank()) {
+            _uiState.value = DetailUiState.Error("Photo ID is missing")
+            return
+        }
         loadJob?.cancel()
+        favoriteJob?.cancel()
         loadJob = viewModelScope.launch {
             _uiState.value = DetailUiState.Loading
-            repository.getPhoto(photoId)
-                .onSuccess { photo ->
-                    repository.recordHistory(photo)
-                    repository.getSimilarPhotos(photo).onSuccess { _similar.value = it }
+            val result = repository.getPhoto(photoId)
+            result.onSuccess { photo ->
+                repository.recordHistory(photo)
+                repository.getSimilarPhotos(photo).onSuccess { _similar.value = it }
+                favoriteJob = viewModelScope.launch {
                     repository.isFavorite(photo.id).collectLatest { fav ->
                         _uiState.value = DetailUiState.Success(photo, fav)
                     }
                 }
-                .onFailure { e ->
-                    _uiState.value = DetailUiState.Error(e.message ?: "Unknown error")
-                }
+            }.onFailure { e ->
+                _uiState.value = DetailUiState.Error(e.message ?: "Unknown error")
+            }
         }
     }
 
@@ -238,9 +248,10 @@ class DetailViewModel @Inject constructor(
                 null
             )?.use { cursor ->
                 if (cursor.moveToFirst()) {
+                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
                     ContentUris.withAppendedId(
                         MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        cursor.getLong(0)
+                        cursor.getLong(idColumn)
                     )
                 } else null
             }

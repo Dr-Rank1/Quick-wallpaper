@@ -17,7 +17,7 @@ class CollectionDetailViewModel @Inject constructor(
     repository: PhotoRepository
 ) : ViewModel() {
 
-    val collectionId: String = checkNotNull(savedStateHandle["collectionId"])
+    val collectionId: String = savedStateHandle["collectionId"] ?: ""
     // Navigation already URL-decodes path args; decoding again breaks titles that contain '%'.
     val collectionTitle: String = savedStateHandle["collectionTitle"] ?: ""
 

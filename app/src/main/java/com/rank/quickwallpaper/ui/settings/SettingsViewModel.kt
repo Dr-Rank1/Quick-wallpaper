@@ -16,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import android.app.Activity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -71,8 +72,24 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val s = settings.value
-            autoWallpaperScheduler.schedule(s.autoChangeEnabled, s.autoChangeHours.toLong())
+            val prefs = dataStore.data.first()
+            val enabled = prefs[KEY_AUTO_CHANGE] ?: false
+            val hours = prefs[KEY_AUTO_CHANGE_HOURS] ?: 24
+            autoWallpaperScheduler.schedule(enabled, hours.toLong())
+        }
+    }
+
+    fun resetToDefaults() {
+        viewModelScope.launch {
+            dataStore.edit {
+                it[KEY_DARK_THEME] = true
+                it[KEY_DYNAMIC_COLORS] = true
+                it[KEY_DOWNLOAD_QUALITY] = DownloadQuality.FULL.name
+                it[KEY_WALLPAPER_FIT] = WallpaperFit.FILL.name
+                it[KEY_AUTO_CHANGE] = false
+                it[KEY_AUTO_CHANGE_HOURS] = 24
+            }
+            autoWallpaperScheduler.schedule(false, 24L)
         }
     }
 

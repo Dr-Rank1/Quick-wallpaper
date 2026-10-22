@@ -33,17 +33,23 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .cache(cache)
             .addInterceptor { chain ->
-                val apiKey = BuildConfig.PEXELS_API_KEY
-                if (apiKey.isBlank() || apiKey == "YOUR_KEY_HERE") {
-                    throw IOException(
-                        "Missing PEXELS_API_KEY in local.properties. Add PEXELS_API_KEY=<your key> and rebuild."
+                val request = chain.request()
+                val isPexelsApi = request.url.host.equals("api.pexels.com", ignoreCase = true)
+                if (isPexelsApi) {
+                    val apiKey = BuildConfig.PEXELS_API_KEY
+                    if (apiKey.isBlank() || apiKey == "YOUR_KEY_HERE") {
+                        throw IOException(
+                            "Missing PEXELS_API_KEY in local.properties. Add PEXELS_API_KEY=<your key> and rebuild."
+                        )
+                    }
+                    chain.proceed(
+                        request.newBuilder()
+                            .addHeader("Authorization", apiKey)
+                            .build()
                     )
+                } else {
+                    chain.proceed(request)
                 }
-                chain.proceed(
-                    chain.request().newBuilder()
-                        .addHeader("Authorization", apiKey)
-                        .build()
-                )
             }
             .apply {
                 if (BuildConfig.DEBUG) {

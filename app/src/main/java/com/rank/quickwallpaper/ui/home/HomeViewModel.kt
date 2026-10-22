@@ -41,17 +41,13 @@ class HomeViewModel @Inject constructor(
     private val _wallpaperOfDay = MutableStateFlow<Photo?>(null)
     val wallpaperOfDay: StateFlow<Photo?> = _wallpaperOfDay
 
-    private val _history = MutableStateFlow<List<Photo>>(emptyList())
-    val history: StateFlow<List<Photo>> = _history
+    val history: StateFlow<List<Photo>> = repository.observeHistory()
+        .map { list -> list.map { repository.historyToPhoto(it) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
         viewModelScope.launch {
             repository.getWallpaperOfTheDay().onSuccess { _wallpaperOfDay.value = it }
-        }
-        viewModelScope.launch {
-            repository.observeHistory().collect { list ->
-                _history.value = list.map { repository.historyToPhoto(it) }
-            }
         }
     }
 

@@ -1,9 +1,13 @@
 package com.rank.quickwallpaper.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "favorites")
+@Entity(
+    tableName = "favorites",
+    indices = [Index(value = ["savedAt"])]
+)
 data class FavoriteEntity(
     @PrimaryKey val id: String,
     val thumbUrl: String,

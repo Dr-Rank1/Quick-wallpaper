@@ -28,11 +28,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Search
@@ -94,7 +96,7 @@ sealed class Screen(
         "settings", Icons.Filled.Settings, Icons.Outlined.Settings, R.string.nav_settings
     )
     object Collections : Screen(
-        "collections", Icons.Filled.Home, Icons.Outlined.Home, R.string.collections
+        "collections", Icons.Filled.Collections, Icons.Outlined.Collections, R.string.collections
     )
     object Detail : Screen(
         "detail/{photoId}", Icons.Filled.Home, Icons.Outlined.Home, R.string.nav_home
@@ -109,7 +111,7 @@ sealed class Screen(
     }
 }
 
-private fun String.encodeUrl() = java.net.URLEncoder.encode(this, "UTF-8")
+private fun String.encodeUrl() = java.net.URLEncoder.encode(this, "UTF-8").replace("+", "%20")
 
 private val bottomNavItems = listOf(
     Screen.Home, Screen.Categories, Screen.Favorites, Screen.Settings
@@ -352,7 +354,7 @@ private fun PaziaNavigationRail(
                 }
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "Pazia",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary

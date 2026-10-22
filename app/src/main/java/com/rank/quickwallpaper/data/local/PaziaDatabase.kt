@@ -9,7 +9,7 @@ import com.rank.quickwallpaper.data.local.entities.HistoryEntity
 
 @Database(
     entities = [FavoriteEntity::class, HistoryEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class PaziaDatabase : RoomDatabase() {
@@ -36,6 +36,14 @@ abstract class PaziaDatabase : RoomDatabase() {
                         viewedAt INTEGER NOT NULL
                     )
                     """.trimIndent()
+                )
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_favorites_savedAt ON favorites(savedAt)"
                 )
             }
         }

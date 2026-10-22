@@ -26,17 +26,22 @@ class AutoWallpaperWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val favorites = repository.getFavoriteEntities()
-        if (favorites.isEmpty()) return Result.success()
+        val (imageUrl, local) = if (favorites.isNotEmpty()) {
+            val entity = favorites.random()
+            Pair<String, String?>(entity.fullUrl, entity.localCachedPath.takeIf { it.isNotBlank() })
+        } else {
+            val fallback = repository.getRandomPhoto().getOrNull() ?: return Result.retry()
+            val url = fallback.fullUrl.ifBlank { fallback.regularUrl }
+            Pair<String, String?>(url, null)
+        }
 
-        val entity = favorites.random()
         val prefs = dataStore.data.first()
         val fit = prefs[SettingsViewModel.KEY_WALLPAPER_FIT]
             ?.let { runCatching { WallpaperFit.valueOf(it) }.getOrDefault(WallpaperFit.FILL) }
             ?: WallpaperFit.FILL
 
-        val local = entity.localCachedPath.takeIf { it.isNotBlank() }
         return wallpaperApplier.apply(
-            imageUrl = entity.fullUrl,
+            imageUrl = imageUrl,
             target = WallpaperTarget.HOME,
             fit = fit,
             localPath = local

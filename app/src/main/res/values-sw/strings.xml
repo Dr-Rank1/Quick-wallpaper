@@ -48,6 +48,7 @@
 
     <!-- Favorites -->
     <string name="favorites_empty">Hakuna vipendwa bado.\nGusa ikoni ya moyo kwenye picha yoyote.</string>
+    <string name="favorites_empty_hint">Gusa ikoni ya ♡ kwenye picha yoyote ili kuihifadhi hapa</string>
 
     <!-- Error / state -->
     <string name="error_load">Haikuweza kupakia picha. Angalia muunganisho wako.</string>
@@ -144,4 +145,10 @@
     <string name="clear_history">Futa historia ya kutazama</string>
     <string name="clear_history_desc">Ondoa picha zilizotazamwa hivi karibuni</string>
     <string name="history_cleared">Historia ya kutazama imefutwa</string>
+
+    <!-- Wallpaper Preview Simulator -->
+    <string name="preview_wallpaper">Onyesho la Awali</string>
+    <string name="preview_lock_screen">Skrini ya Kufunga</string>
+    <string name="preview_home_screen">Skrini ya Nyumbani</string>
+    <string name="preview_exit">Toka</string>
 </resources>

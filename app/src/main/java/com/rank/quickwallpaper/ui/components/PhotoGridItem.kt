@@ -72,7 +72,9 @@ fun PhotoGridItem(
     )
 
     val aspectRatioMod = if (photo.aspectRatio > 0)
-        Modifier.aspectRatio(photo.aspectRatio.coerceIn(0.5f, 2.5f)) else Modifier
+        Modifier.aspectRatio(photo.aspectRatio.coerceIn(0.5f, 2.5f))
+    else
+        Modifier.aspectRatio(0.75f)
 
     Box(
         modifier = modifier

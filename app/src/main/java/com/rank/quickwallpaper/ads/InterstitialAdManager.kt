@@ -17,10 +17,10 @@ private const val MIN_FOREGROUND_MS = 30 * 1000L
 class InterstitialAdManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private var interstitialAd: StartAppAd? = null
-    private var lastShownTime = 0L
-    private var foregroundSinceMs = System.currentTimeMillis()
-    private var sessionShown = false
+    @Volatile private var interstitialAd: StartAppAd? = null
+    @Volatile private var lastShownTime = 0L
+    @Volatile private var foregroundSinceMs = System.currentTimeMillis()
+    @Volatile private var sessionShown = false
 
     fun onForegrounded() {
         foregroundSinceMs = System.currentTimeMillis()
