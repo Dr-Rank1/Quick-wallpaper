@@ -1,5 +1,6 @@
 package com.rank.quickwallpaper.ui.detail
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -53,7 +54,7 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Wallpaper
@@ -69,11 +70,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -672,8 +675,15 @@ fun DetailScreen(
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     showWallpaperSheet = false
                                     viewModel.applyWallpaper(target)
-                                    val activity = context as? ComponentActivity
+                                    val activity = context as? Activity
                                     activity?.let { viewModel.maybeShowInterstitial(it) }
+                                }
+                            },
+                            onSelectRewarded4K = {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    showWallpaperSheet = false
+                                    val activity = context as? Activity
+                                    activity?.let { viewModel.triggerRewardedSet(it) }
                                 }
                             },
                             onDismiss = { showWallpaperSheet = false }
@@ -697,6 +707,11 @@ fun DetailScreen(
                                     showInfoSheet = false
                                     onRelatedPhoto(relatedId)
                                 }
+                            },
+                            onWatchAdFor4K = {
+                                val activity = context as? Activity
+                                activity?.let { viewModel.triggerRewardedSet(it) }
+                                showInfoSheet = false
                             },
                             onClose = { showInfoSheet = false }
                         )
@@ -748,6 +763,7 @@ fun DetailScreen(
 @Composable
 private fun WallpaperTargetSheet(
     onSelect: (WallpaperTarget) -> Unit,
+    onSelectRewarded4K: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Column(
@@ -807,6 +823,37 @@ private fun WallpaperTargetSheet(
             }
         }
 
+        // Rewarded 4K Ultra Option
+        OutlinedButton(
+            onClick = onSelectRewarded4K,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = MaterialTheme.shapes.medium,
+            border = androidx.compose.foundation.BorderStroke(
+                1.5.dp,
+                MaterialTheme.colorScheme.primary
+            ),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Bolt,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "Ultra 4K Apply (Watch Short Ad)",
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
         Spacer(Modifier.height(4.dp))
         TextButton(
             onClick = onDismiss,
@@ -827,6 +874,7 @@ private fun PhotoInfoSheet(
     photo: Photo,
     similar: List<Photo>,
     onRelatedPhoto: (String) -> Unit,
+    onWatchAdFor4K: () -> Unit,
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
@@ -867,7 +915,7 @@ private fun PhotoInfoSheet(
                 )
             }
             Icon(
-                imageVector = Icons.Outlined.OpenInNew,
+                imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(18.dp)
@@ -941,6 +989,57 @@ private fun PhotoInfoSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        // Rewarded Video: Unlock Ultra HD 4K Quality
+        Surface(
+            onClick = onWatchAdFor4K,
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Bolt,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Unlock Ultra 4K Quality",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "Watch a short ad to apply in max resolution",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+                        )
+                    }
+                }
+            }
         }
 
         // Similar Wallpapers Carousel
