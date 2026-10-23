@@ -38,6 +38,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Collection
+import com.rank.quickwallpaper.ui.components.BannerAdSlot
 import com.rank.quickwallpaper.ui.components.ErrorState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,6 +51,9 @@ fun CollectionsScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
+        bottomBar = {
+            BannerAdSlot(modifier = Modifier.padding(bottom = 8.dp))
+        },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.collections)) },
