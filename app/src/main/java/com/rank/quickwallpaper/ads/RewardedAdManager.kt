@@ -3,6 +3,7 @@ package com.rank.quickwallpaper.ads
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import com.unity3d.ads.IUnityAdsLoadListener
 import com.unity3d.ads.IUnityAdsShowListener
 import com.unity3d.ads.UnityAds
@@ -74,6 +75,7 @@ class RewardedAdManager @Inject constructor(
     fun show(activity: Activity, onRewarded: () -> Unit, onDismissed: () -> Unit) {
         if (!_ready.value) {
             load()
+            Toast.makeText(activity, "Video ad is loading, please try again in a moment...", Toast.LENGTH_SHORT).show()
             onDismissed()
             return
         }
