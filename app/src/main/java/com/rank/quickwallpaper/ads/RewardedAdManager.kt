@@ -8,9 +8,13 @@ import com.unity3d.ads.IUnityAdsShowListener
 import com.unity3d.ads.UnityAds
 import com.unity3d.ads.UnityAdsShowOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,11 +26,27 @@ class RewardedAdManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val unityAdsManager: UnityAdsManager
 ) {
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val _ready = MutableStateFlow(false)
     val ready: StateFlow<Boolean> = _ready.asStateFlow()
     private val isLoading = AtomicBoolean(false)
 
+    init {
+        scope.launch {
+            unityAdsManager.isInitialized.collect { initialized ->
+                if (initialized) {
+                    Log.d(TAG, "Unity Ads initialized signal received in RewardedAdManager, loading ad...")
+                    load()
+                }
+            }
+        }
+    }
+
     fun load() {
+        if (!UnityAds.isInitialized) {
+            Log.d(TAG, "Cannot load Rewarded: Unity Ads not initialized yet")
+            return
+        }
         if (_ready.value || isLoading.get()) return
         isLoading.set(true)
         UnityAds.load(
@@ -75,14 +95,19 @@ class RewardedAdManager @Inject constructor(
                     onDismissed()
                 }
 
-                override fun onUnityAdsShowStart(placementId: String?) {}
+                override fun onUnityAdsShowStart(placementId: String?) {
+                    Log.d(TAG, "Unity Rewarded ad started")
+                }
 
-                override fun onUnityAdsShowClick(placementId: String?) {}
+                override fun onUnityAdsShowClick(placementId: String?) {
+                    Log.d(TAG, "Unity Rewarded ad clicked")
+                }
 
                 override fun onUnityAdsShowComplete(
                     placementId: String?,
                     state: UnityAds.UnityAdsShowCompletionState?
                 ) {
+                    Log.d(TAG, "Unity Rewarded ad completed ($state)")
                     if (state == UnityAds.UnityAdsShowCompletionState.COMPLETED) {
                         onRewarded()
                     }
@@ -92,6 +117,4 @@ class RewardedAdManager @Inject constructor(
             }
         )
     }
-
-    fun isReady() = _ready.value
 }

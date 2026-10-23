@@ -38,6 +38,11 @@
     <string name="cancel">Ghairi</string>
     <string name="wallpaper_set_success">Mwandiko umewekwa!</string>
 
+    <string name="category_feed_mode">Mtiririko</string>
+    <string name="category_grid_mode">Mandhari Yote</string>
+    <string name="category_explore">Vinjari</string>
+    <string name="category_curated_4k">Teule 4K</string>
+    <string name="category_wallpapers_tag">Mandhari</string>
     <!-- Download -->
     <string name="download_in_progress">Inapakua picha ya ukuta…</string>
     <string name="download_success">Imehifadhiwa kwenye Picha/Pazia</string>

@@ -8,12 +8,16 @@ import com.unity3d.ads.IUnityAdsShowListener
 import com.unity3d.ads.UnityAds
 import com.unity3d.ads.UnityAdsShowOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val FREQUENCY_CAP_MS = 45 * 1000L
+private const val FREQUENCY_CAP_MS = 15 * 1000L
 private const val TAG = "InterstitialAdManager"
 
 @Singleton
@@ -21,12 +25,28 @@ class InterstitialAdManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val unityAdsManager: UnityAdsManager
 ) {
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     @Volatile private var isLoaded = false
     private val isLoading = AtomicBoolean(false)
     @Volatile private var lastShownTime = 0L
     private val actionCounter = AtomicInteger(0)
 
+    init {
+        scope.launch {
+            unityAdsManager.isInitialized.collect { initialized ->
+                if (initialized) {
+                    Log.d(TAG, "Unity Ads initialized signal received in InterstitialAdManager, loading ad...")
+                    load()
+                }
+            }
+        }
+    }
+
     fun load() {
+        if (!UnityAds.isInitialized) {
+            Log.d(TAG, "Cannot load Interstitial: Unity Ads not initialized yet")
+            return
+        }
         if (isLoaded || isLoading.get()) return
         isLoading.set(true)
         UnityAds.load(
@@ -57,7 +77,7 @@ class InterstitialAdManager @Inject constructor(
         val canShow = force || (elapsed >= FREQUENCY_CAP_MS)
 
         if (!canShow || !isLoaded) {
-            load()
+            if (!isLoaded) load()
             onDone()
             return
         }
@@ -79,15 +99,19 @@ class InterstitialAdManager @Inject constructor(
                 }
 
                 override fun onUnityAdsShowStart(placementId: String?) {
+                    Log.d(TAG, "Unity Interstitial ad display started")
                     lastShownTime = System.currentTimeMillis()
                 }
 
-                override fun onUnityAdsShowClick(placementId: String?) {}
+                override fun onUnityAdsShowClick(placementId: String?) {
+                    Log.d(TAG, "Unity Interstitial ad clicked")
+                }
 
                 override fun onUnityAdsShowComplete(
                     placementId: String?,
                     state: UnityAds.UnityAdsShowCompletionState?
                 ) {
+                    Log.d(TAG, "Unity Interstitial ad display completed ($state)")
                     lastShownTime = System.currentTimeMillis()
                     load()
                     onDone()

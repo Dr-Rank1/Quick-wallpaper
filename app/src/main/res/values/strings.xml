@@ -37,6 +37,11 @@
     <string name="cancel">Cancel</string>
     <string name="wallpaper_set_success">Wallpaper set successfully!</string>
 
+    <string name="category_feed_mode">Stream View</string>
+    <string name="category_grid_mode">All Themes</string>
+    <string name="category_explore">Explore</string>
+    <string name="category_curated_4k">Curated 4K</string>
+    <string name="category_wallpapers_tag">Wallpapers</string>
     <!-- Download -->
     <string name="download_in_progress">Downloading wallpaper…</string>
     <string name="download_success">Saved to Pictures/Pazia</string>
