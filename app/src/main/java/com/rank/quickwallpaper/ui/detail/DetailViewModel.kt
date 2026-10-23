@@ -213,7 +213,7 @@ class DetailViewModel @Inject constructor(
         if (adsRemoved.value) {
             enqueueDownload(photo)
         } else {
-            interstitialAdManager.maybeShow(activity) { enqueueDownload(photo) }
+            interstitialAdManager.maybeShow(activity, force = true) { enqueueDownload(photo) }
         }
     }
 
@@ -394,7 +394,7 @@ class DetailViewModel @Inject constructor(
 
     fun maybeShowInterstitial(activity: Activity) {
         if (!adsRemoved.value) {
-            interstitialAdManager.recordActionAndMaybeShow(activity)
+            interstitialAdManager.maybeShow(activity, force = true)
         }
     }
 
