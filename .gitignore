@@ -40,3 +40,4 @@ build/
 .gradle/
 # Keystore
 upload-keystore.jks
+*.pem
