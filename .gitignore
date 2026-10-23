@@ -41,3 +41,5 @@ build/
 # Keystore
 upload-keystore.jks
 *.pem
+*.der
+keystore.properties
