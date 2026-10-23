@@ -38,6 +38,8 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
 
         var isReady by mutableStateOf(false)
         var onboardingDone by mutableStateOf(false)

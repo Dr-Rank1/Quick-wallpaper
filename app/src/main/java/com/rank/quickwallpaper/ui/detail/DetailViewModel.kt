@@ -333,13 +333,32 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    fun triggerRewardedSet(activity: Activity) {
+    fun applyBothWithAd(activity: Activity) {
         if (_uiState.value !is DetailUiState.Success) return
-        rewardedAdManager.show(
-            activity = activity,
-            onRewarded = { applyWallpaper(WallpaperTarget.BOTH) },
-            onDismissed = {}
-        )
+        if (rewardedAdManager.ready.value) {
+            rewardedAdManager.show(
+                activity = activity,
+                onRewarded = { applyWallpaper(WallpaperTarget.BOTH) },
+                onDismissed = {
+                    interstitialAdManager.maybeShow(
+                        activity = activity,
+                        force = true,
+                        onDone = { applyWallpaper(WallpaperTarget.BOTH) }
+                    )
+                }
+            )
+        } else {
+            interstitialAdManager.maybeShow(
+                activity = activity,
+                force = true,
+                onDone = { applyWallpaper(WallpaperTarget.BOTH) }
+            )
+            rewardedAdManager.load()
+        }
+    }
+
+    fun triggerRewardedSet(activity: Activity) {
+        applyBothWithAd(activity)
     }
 
     fun unlockAdsRemoval(activity: Activity, onResult: (Boolean) -> Unit) {

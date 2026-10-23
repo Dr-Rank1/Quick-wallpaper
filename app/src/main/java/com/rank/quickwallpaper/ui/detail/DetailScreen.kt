@@ -43,18 +43,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Wallpaper
@@ -96,6 +100,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -662,7 +667,7 @@ fun DetailScreen(
                     )
                 }
 
-                // Clean & Fast Apply Sheet (No blur, no darken!)
+                // Modern Apply as Wallpaper Sheet (Home, Lock, Both - where Both requires watching an ad)
                 if (showWallpaperSheet) {
                     ModalBottomSheet(
                         onDismissRequest = { showWallpaperSheet = false },
@@ -671,22 +676,39 @@ fun DetailScreen(
                         dragHandle = { BottomSheetDefaults.DragHandle() }
                     ) {
                         WallpaperTargetSheet(
-                            onSelect = { target ->
+                            photo = photo,
+                            onSelectHome = {
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     showWallpaperSheet = false
-                                    viewModel.applyWallpaper(target)
+                                    viewModel.applyWallpaper(WallpaperTarget.HOME)
                                     val activity = context as? Activity
                                     activity?.let { viewModel.maybeShowInterstitial(it) }
                                 }
                             },
-                            onSelectRewarded4K = {
+                            onSelectLock = {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    showWallpaperSheet = false
+                                    viewModel.applyWallpaper(WallpaperTarget.LOCK)
+                                    val activity = context as? Activity
+                                    activity?.let { viewModel.maybeShowInterstitial(it) }
+                                }
+                            },
+                            onSelectBoth = {
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     showWallpaperSheet = false
                                     val activity = context as? Activity
-                                    activity?.let { viewModel.triggerRewardedSet(it) }
+                                    if (activity != null) {
+                                        viewModel.applyBothWithAd(activity)
+                                    } else {
+                                        viewModel.applyWallpaper(WallpaperTarget.BOTH)
+                                    }
                                 }
                             },
-                            onDismiss = { showWallpaperSheet = false }
+                            onDismiss = {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    showWallpaperSheet = false
+                                }
+                            }
                         )
                     }
                 }
@@ -757,111 +779,234 @@ fun DetailScreen(
 }
 
 /**
- * Clean & Fast Target Selection Bottom Sheet.
- * Direct, instant Home, Lock, or Both screens without any complex sliders.
+ * Modern, card-based Wallpaper Target Selection Bottom Sheet.
+ * Exclusively provides Home Screen, Lock Screen, and Both Screens (watching an ad required).
  */
 @Composable
 private fun WallpaperTargetSheet(
-    onSelect: (WallpaperTarget) -> Unit,
-    onSelectRewarded4K: () -> Unit,
+    photo: Photo,
+    onSelectHome: () -> Unit,
+    onSelectLock: () -> Unit,
+    onSelectBoth: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = stringResource(R.string.set_wallpaper_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+        // Header with Mini Preview Thumbnail
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 46.dp, height = 62.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+            ) {
+                AsyncImage(
+                    model = photo.thumbUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.set_wallpaper_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Choose where to apply this wallpaper",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        // 1. Home Screen Option
+        WallpaperOptionCard(
+            title = stringResource(R.string.wallpaper_home),
+            subtitle = "Set on your main home screen",
+            icon = Icons.Outlined.Home,
+            isPromoted = false,
+            badgeText = null,
+            onClick = onSelectHome
+        )
+
+        // 2. Lock Screen Option
+        WallpaperOptionCard(
+            title = stringResource(R.string.wallpaper_lock),
+            subtitle = "Set on your device lock screen & keyguard",
+            icon = Icons.Outlined.Lock,
+            isPromoted = false,
+            badgeText = null,
+            onClick = onSelectLock
+        )
+
+        // 3. Both Screens Option (Required to Watch Ad)
+        WallpaperOptionCard(
+            title = stringResource(R.string.wallpaper_both),
+            subtitle = "Apply across entire device in Ultra HD",
+            icon = Icons.Filled.AutoAwesome,
+            isPromoted = true,
+            badgeText = "Watch Short Ad",
+            onClick = onSelectBoth
         )
 
         Spacer(Modifier.height(4.dp))
 
-        WallpaperTarget.entries.forEach { target ->
-            Button(
-                onClick = { onSelect(target) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = when (target) {
-                        WallpaperTarget.BOTH -> MaterialTheme.colorScheme.primary
-                        else -> MaterialTheme.colorScheme.surfaceVariant
-                    },
-                    contentColor = when (target) {
-                        WallpaperTarget.BOTH -> Color.White
-                        else -> MaterialTheme.colorScheme.onSurface
-                    }
-                )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        imageVector = when (target) {
-                            WallpaperTarget.HOME -> Icons.Filled.Home
-                            WallpaperTarget.LOCK -> Icons.Filled.Lock
-                            WallpaperTarget.BOTH -> Icons.Filled.AutoAwesome
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = when (target) {
-                            WallpaperTarget.HOME -> stringResource(R.string.wallpaper_home)
-                            WallpaperTarget.LOCK -> stringResource(R.string.wallpaper_lock)
-                            WallpaperTarget.BOTH -> stringResource(R.string.wallpaper_both)
-                        },
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-
-        // Rewarded 4K Ultra Option
-        OutlinedButton(
-            onClick = onSelectRewarded4K,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = MaterialTheme.shapes.medium,
-            border = androidx.compose.foundation.BorderStroke(
-                1.5.dp,
-                MaterialTheme.colorScheme.primary
-            ),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Bolt,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = "Ultra 4K Apply (Watch Short Ad)",
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Spacer(Modifier.height(4.dp))
         TextButton(
             onClick = onDismiss,
             modifier = Modifier.align(Alignment.End)
         ) {
-            Text(stringResource(R.string.cancel))
+            Text(
+                text = stringResource(R.string.cancel),
+                fontWeight = FontWeight.Medium
+            )
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
+    }
+}
+
+/**
+ * Visual interactive option card with haptics, iconography, and promotional ad badges.
+ */
+@Composable
+private fun WallpaperOptionCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    isPromoted: Boolean = false,
+    badgeText: String? = null,
+    onClick: () -> Unit
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Surface(
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
+        shape = RoundedCornerShape(16.dp),
+        color = if (isPromoted) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        },
+        border = if (isPromoted) {
+            androidx.compose.foundation.BorderStroke(
+                1.5.dp,
+                Brush.horizontalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.primary,
+                        Color(0xFFFFB74D)
+                    )
+                )
+            )
+        } else {
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+            )
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isPromoted) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isPromoted) Color.White else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    if (badgeText != null) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFFB74D),
+                            contentColor = Color.Black
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.PlayArrow,
+                                    contentDescription = null,
+                                    tint = Color.Black,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                                Text(
+                                    text = badgeText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 10.sp,
+                                    color = Color.Black
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(2.dp))
+
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                contentDescription = null,
+                tint = if (isPromoted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(14.dp)
+            )
+        }
     }
 }
 

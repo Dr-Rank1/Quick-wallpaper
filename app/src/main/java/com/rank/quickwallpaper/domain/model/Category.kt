@@ -8,7 +8,8 @@ data class Category(
     val tagline: String = "",
     val gradientStart: Long = 0xFF1E3A5FL,
     val gradientEnd: Long = 0xFF0D1B2AL,
-    val highlightBadge: String = "4K"
+    val highlightBadge: String = "4K",
+    val imageUrl: String = ""
 )
 
 val ALL_CATEGORIES = listOf(
@@ -20,7 +21,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "True obsidian blacks & battery-saving aesthetics",
         gradientStart = 0xFF0A0A0AL,
         gradientEnd = 0xFF1A1A24L,
-        highlightBadge = "OLED"
+        highlightBadge = "OLED",
+        imageUrl = "https://images.pexels.com/photos/1037992/pexels-photo-1037992.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "nature",
@@ -30,7 +32,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Lush wilderness, misty peaks & serene waters",
         gradientStart = 0xFF064E3BL,
         gradientEnd = 0xFF047857L,
-        highlightBadge = "Popular"
+        highlightBadge = "Popular",
+        imageUrl = "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "architecture",
@@ -40,7 +43,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Modern geometric lines & timeless cityscapes",
         gradientStart = 0xFF4C1D95L,
         gradientEnd = 0xFF6D28D9L,
-        highlightBadge = "Design"
+        highlightBadge = "Design",
+        imageUrl = "https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "abstract",
@@ -50,7 +54,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Vibrant fluid colorways & mesmerizing shapes",
         gradientStart = 0xFF831843L,
         gradientEnd = 0xFFBE185DL,
-        highlightBadge = "Art"
+        highlightBadge = "Art",
+        imageUrl = "https://images.pexels.com/photos/2832382/pexels-photo-2832382.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "animals",
@@ -60,7 +65,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Majestic creatures captured in their raw habitat",
         gradientStart = 0xFF78350FL,
         gradientEnd = 0xFFB45309L,
-        highlightBadge = "Wild"
+        highlightBadge = "Wild",
+        imageUrl = "https://images.pexels.com/photos/247502/pexels-photo-247502.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "travel",
@@ -70,7 +76,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Iconic landmarks & distant dreamy destinations",
         gradientStart = 0xFF0C4A6EL,
         gradientEnd = 0xFF0369A1L,
-        highlightBadge = "Scenic"
+        highlightBadge = "Scenic",
+        imageUrl = "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "minimal",
@@ -80,7 +87,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Less is more: clean compositions & calming space",
         gradientStart = 0xFF1F2937L,
         gradientEnd = 0xFF374151L,
-        highlightBadge = "Clean"
+        highlightBadge = "Clean",
+        imageUrl = "https://images.pexels.com/photos/310452/pexels-photo-310452.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "dark",
@@ -90,7 +98,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Moody, cinematic silhouettes & nighttime shadows",
         gradientStart = 0xFF111827L,
         gradientEnd = 0xFF1F2937L,
-        highlightBadge = "Moody"
+        highlightBadge = "Moody",
+        imageUrl = "https://images.pexels.com/photos/2387793/pexels-photo-2387793.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "cars",
@@ -100,7 +109,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Precision engineering, speed & automotive design",
         gradientStart = 0xFF881337L,
         gradientEnd = 0xFFE11D48L,
-        highlightBadge = "Speed"
+        highlightBadge = "Speed",
+        imageUrl = "https://images.pexels.com/photos/337909/pexels-photo-337909.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "space",
@@ -110,7 +120,8 @@ val ALL_CATEGORIES = listOf(
         tagline = "Deep universe, radiant nebulae & infinite stars",
         gradientStart = 0xFF172554L,
         gradientEnd = 0xFF1E3A8AL,
-        highlightBadge = "Cosmic"
+        highlightBadge = "Cosmic",
+        imageUrl = "https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg?auto=compress&cs=tinysrgb&w=800"
     ),
     Category(
         id = "kenya",
@@ -120,6 +131,7 @@ val ALL_CATEGORIES = listOf(
         tagline = "Golden savannahs, rich heritage & African majesty",
         gradientStart = 0xFF14532DL,
         gradientEnd = 0xFF15803DL,
-        highlightBadge = "Special"
+        highlightBadge = "Special",
+        imageUrl = "https://images.pexels.com/photos/247376/pexels-photo-247376.jpeg?auto=compress&cs=tinysrgb&w=800"
     )
 )

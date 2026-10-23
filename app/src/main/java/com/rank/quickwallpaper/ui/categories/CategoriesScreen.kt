@@ -58,6 +58,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -71,6 +72,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import coil3.compose.AsyncImage
 import com.rank.quickwallpaper.R
 import com.rank.quickwallpaper.domain.model.Category
 import com.rank.quickwallpaper.ui.components.BannerAdSlot
@@ -371,24 +373,46 @@ private fun CategoryHeroCard(category: Category) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(136.dp)
             .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        startColor.copy(alpha = 0.85f),
-                        endColor.copy(alpha = 0.95f),
-                        Color(0xFF0F172A)
-                    )
-                )
-            )
+            .background(startColor)
             .border(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.15f),
+                color = Color.White.copy(alpha = 0.2f),
                 shape = shape
             )
-            .padding(18.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        // Relevant photographic background picture like Collections page
+        if (category.imageUrl.isNotBlank()) {
+            AsyncImage(
+                model = category.imageUrl,
+                contentDescription = category.displayName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Multi-stop cinematic gradient scrim
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.82f),
+                            Color.Black.copy(alpha = 0.65f),
+                            endColor.copy(alpha = 0.88f)
+                        )
+                    )
+                )
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -400,7 +424,7 @@ private fun CategoryHeroCard(category: Category) {
                 ) {
                     Text(
                         text = category.emoji,
-                        fontSize = 32.sp
+                        fontSize = 30.sp
                     )
                     Text(
                         text = category.displayName,
@@ -413,14 +437,14 @@ private fun CategoryHeroCard(category: Category) {
                 // Highlight Badge
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White.copy(alpha = 0.15f),
+                    color = Color.White.copy(alpha = 0.22f),
                     border = androidx.compose.foundation.BorderStroke(
                         0.5.dp,
-                        Color.White.copy(alpha = 0.3f)
+                        Color.White.copy(alpha = 0.45f)
                     )
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -441,11 +465,10 @@ private fun CategoryHeroCard(category: Category) {
             }
 
             if (category.tagline.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
                 Text(
                     text = category.tagline,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = Color.White.copy(alpha = 0.9f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -455,7 +478,8 @@ private fun CategoryHeroCard(category: Category) {
 }
 
 /**
- * Rich category card displayed in the "All Themes" grid gallery view
+ * Rich category card displayed in the "All Themes" grid gallery view with
+ * relevant photographic cover image, scrim overlay, and typography, just like in Collections page.
  */
 @Composable
 private fun CategoryGridCard(
@@ -463,12 +487,11 @@ private fun CategoryGridCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(16.dp)
     val startColor = Color(category.gradientStart)
-    val endColor = Color(category.gradientEnd)
 
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.02f else 1f,
+        targetValue = if (isSelected) 1.03f else 1f,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
         label = "grid_card_scale_${category.id}"
     )
@@ -476,76 +499,118 @@ private fun CategoryGridCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.15f)
+            .aspectRatio(0.85f)
             .scale(scale)
             .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(startColor, endColor)
-                )
-            )
+            .background(startColor)
             .then(
                 if (isSelected) {
                     Modifier.border(
-                        width = 2.dp,
-                        color = Color.White.copy(alpha = 0.7f),
+                        width = 2.5.dp,
+                        brush = Brush.horizontalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                Color.White
+                            )
+                        ),
                         shape = shape
                     )
                 } else {
                     Modifier.border(
                         width = 1.dp,
-                        color = Color.White.copy(alpha = 0.1f),
+                        color = Color.White.copy(alpha = 0.12f),
                         shape = shape
                     )
                 }
             )
             .clickable(onClick = onClick)
-            .padding(14.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+        // High quality relevant picture just like Collections page
+        if (category.imageUrl.isNotBlank()) {
+            AsyncImage(
+                model = category.imageUrl,
+                contentDescription = category.displayName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Deep vertical gradient scrim to ensure title/text legibility
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.92f)
+                        ),
+                        startY = 0f
+                    )
+                )
+        )
+
+        // Top Header: Badge & Selection Dot
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
+                .align(Alignment.TopCenter),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color.Black.copy(alpha = 0.55f),
+                border = androidx.compose.foundation.BorderStroke(
+                    0.5.dp,
+                    Color.White.copy(alpha = 0.25f)
+                )
             ) {
                 Text(
-                    text = category.emoji,
-                    fontSize = 32.sp
+                    text = category.highlightBadge,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                 )
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = Color.Black.copy(alpha = 0.35f)
-                ) {
-                    Text(
-                        text = category.highlightBadge,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
             }
 
-            Column {
-                Text(
-                    text = category.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
-                if (category.tagline.isNotBlank()) {
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        text = category.tagline,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.75f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            }
+        }
+
+        // Bottom Info: Title, Tagline
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomStart)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+        ) {
+            Text(
+                text = "${category.emoji} ${category.displayName}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (category.tagline.isNotBlank()) {
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    text = category.tagline,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.8f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
