@@ -38,13 +38,26 @@ android {
     }
 
     signingConfigs {
-        val keystorePath = localProps.getProperty("KEYSTORE_PATH")
-        if (!keystorePath.isNullOrBlank()) {
+        val ksFile = rootProject.file("keystore.properties")
+        val ksProps = Properties().apply {
+            if (ksFile.exists()) load(ksFile.inputStream())
+        }
+        val keystorePath = ksProps.getProperty("storeFile")
+            ?: localProps.getProperty("KEYSTORE_PATH")
+            ?: "upload-keystore.jks"
+        val keystoreFile = rootProject.file(keystorePath)
+        if (keystoreFile.exists()) {
             create("release") {
-                storeFile = rootProject.file(keystorePath)
-                storePassword = localProps.getProperty("KEYSTORE_PASSWORD")
-                keyAlias = localProps.getProperty("KEY_ALIAS")
-                keyPassword = localProps.getProperty("KEY_PASSWORD")
+                storeFile = keystoreFile
+                storePassword = ksProps.getProperty("storePassword")
+                    ?: localProps.getProperty("KEYSTORE_PASSWORD")
+                    ?: "QuickWallpaper2026!"
+                keyAlias = ksProps.getProperty("keyAlias")
+                    ?: localProps.getProperty("KEY_ALIAS")
+                    ?: "upload"
+                keyPassword = ksProps.getProperty("keyPassword")
+                    ?: localProps.getProperty("KEY_PASSWORD")
+                    ?: "QuickWallpaper2026!"
             }
         }
     }
